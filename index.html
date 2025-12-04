@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Игра: Смысл Слова</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="large-header" class="large-header">
+  <canvas id="demo-canvas"></canvas>
+</div>
+
+<div class="container">
+  <h1 class="main-title">
+    СМЫСЛ <span class="thin">СЛОВА</span>
+  </h1>
+
+
+  <div id="auth-screen" class="card">
+    <h2>Добро пожаловать!</h2>
+    <p>Введите ваше имя, чтобы начать игру</p>
+    <input type="text" id="nameInput" placeholder="Введите имя" maxlength="20"
+           style="padding:12px; font-size:1.2em; width: 100%; max-width: 300px; border-radius: 8px; border: 2px solid var(--primary);">
+    <br><br>
+    <button class="btn btn-large" onclick="startGame()">
+      Начать игру
+    </button>
+    <br><br>
+    <small style="color: rgba(255,255,255,0.6);">
+      ℹИспользуйте мышку и перетаскивание для прохождения уровней
+    </small>
+  </div>
+
+
+  <div id="menu-screen" style="display:none;">
+
+    <div class="side-panels">
+
+      <div class="side-panel">
+        <div class="card compact-card">
+          <h3 style="margin-bottom: 15px;">Топ игроков</h3>
+          <div id="mini-leaderboard">
+            <div class="loading-text">Загрузка...</div>
+          </div>
+          <button class="btn btn-small" onclick="window.location.href='leaderboard.html'" style="margin-top: 10px;">
+            Полная таблица
+          </button>
+        </div>
+      </div>
+
+
+      <div class="main-panel">
+        <div class="card">
+          <div class="player-info">
+            <div class="player-stats">
+              <div class="stat-item">
+                <span class="stat-label">Игрок:</span>
+                <span id="welcome-text" class="stat-value"></span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Очки:</span>
+                <span id="score-text" class="stat-value">0</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Пройдено:</span>
+                <span id="completed-text" class="stat-value">0/3</span>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 20px; margin-bottom: 15px;">Выберите уровень</h3>
+
+          <div class="level-grid">
+            <div id="lvl1" class="level-card" onclick="goTo(1)">
+              <h3>Уровень 1</h3>
+              <p class="level-desc">Пары</p>
+              <div class="level-info">
+                <small>90 сек</small>
+              </div>
+              <div class="level-stats" id="stats-1"></div>
+            </div>
+
+            <div id="lvl2" class="level-card" onclick="goTo(2)">
+              <h3>Уровень 2</h3>
+              <p class="level-desc">Скорость</p>
+              <div class="level-info">
+                <small>120 сек</small>
+              </div>
+              <div class="level-stats" id="stats-2"></div>
+            </div>
+
+            <div id="lvl3" class="level-card" onclick="goTo(3)">
+              <h3>Уровень 3</h3>
+              <p class="level-desc">Скорость</p>
+              <div class="level-info">
+                <small>120 сек</small>
+              </div>
+              <div class="level-stats" id="stats-3"></div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <button class="btn" style="background:#e17055" onclick="resetProgress()">
+              Сбросить прогресс
+            </button>
+            <button class="btn" style="background:#d63031" onclick="UserManager.logout()">
+              Сменить игрока
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="side-panel">
+        <div class="card compact-card">
+          <h3 style="margin-bottom: 15px;">Как играть</h3>
+          <div class="how-to-play">
+            <div class="instruction-item">
+              <p>1 уровень: переносите слова из кружков в наиболее подходящие категории согласно словам внутри.</p>
+            </div>
+            <div class="instruction-item">
+              <p>Уровень 2: переносите слова в нужные категории, но теперь слова падают!</p>
+            </div>
+            <div class="instruction-item">
+              <p>Уровень 3: переносите падающие слова в нужные категории, но теперь это сложнее намного!</p>
+            </div>
+            <div class="instruction-item">
+              <p>Не забудьте про время!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer style="text-align: center; margin-top: 20px; opacity: 0.6; font-size: 0.9em;">
+    <p>Сделано с ♥</p>
+  </footer>
+</div>
+
+<script src="script.js"></script>
+<script>
+    function startGame() {
+        const nameInput = document.getElementById('nameInput');
+        const name = nameInput.value.trim();
+
+        if (!name || name.length === 0) {
+            nameInput.style.borderColor = '#d63031';
+            nameInput.style.animation = 'shake 0.5s';
+            setTimeout(() => {
+                nameInput.style.borderColor = '';
+                nameInput.style.animation = '';
+            }, 500);
+            NotificationManager.show("⚠ Введите имя!", 'error');
+            return;
+        }
+
+        UserManager.login(name);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const nameInput = document.getElementById('nameInput');
+        if (nameInput) {
+            nameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    startGame();
+                }
+            });
+            nameInput.focus();
+        }
+
+        const adminSequence = ['а', 'д', 'м', 'и', 'н'];
+        let adminProgress = 0;
+
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toLowerCase();
+            if (key === adminSequence[adminProgress]) {
+                adminProgress++;
+                if (adminProgress === adminSequence.length) {
+                    adminProgress = 0;
+                    unlockAllLevels();
+                }
+            } else {
+                adminProgress = key === adminSequence[0] ? 1 : 0;
+            }
+        });
+    });
+
+    function resetProgress() {
+        if (!UserManager.user) return;
+
+        //if (confirm("Вы уверены? Это сбросит весь ваш прогресс.")) {
+            UserManager.user.unlocked = 1;
+            UserManager.user.completedLevels = [];
+            UserManager.user.attempts = {};
+            UserManager.user.bestTimes = {};
+            UserManager.user.score = 0;
+            UserManager.save();
+            window.location.reload();
+        //}
+    }
+
+    function loadMiniLeaderboard() {
+        const container = document.getElementById('mini-leaderboard');
+        const leaders = LeaderboardManager.getTopPlayers(5);
+
+        if (leaders.length === 0) {
+            container.innerHTML = '<p style="opacity: 0.6; font-size: 0.9em;">Пока нет результатов</p>';
+            return;
+        }
+
+        let html = '<div class="mini-leaderboard-list">';
+        leaders.forEach((player, index) => {
+            const medal = `${index + 1}.`;
+            const isCurrentUser = UserManager.user && player.name === UserManager.user.name;
+            html += `
+                <div class="mini-leader-item ${isCurrentUser ? 'current-user' : ''}">
+                    <span class="leader-rank">${medal}</span>
+                    <span class="leader-name">${player.name}</span>
+                    <span class="leader-score">${player.score}</span>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function unlockAllLevels() {
+        if (!UserManager.user) return;
+        UserManager.user.unlocked = 3;
+        UserManager.user.completedLevels = [1, 2, 3];
+        UserManager.save();
+        NotificationManager.show("Режим администратора активирован: все уровни разблокированы!", 'success', 5000);
+        setTimeout(() => window.location.reload(), 3000);
+    }
+
+    window.onload = () => {
+        AnimatedBackground.init();
+
+        if (UserManager.user) {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('menu-screen').style.display = 'block';
+            document.getElementById('welcome-text').innerText = UserManager.user.name;
+            document.getElementById('score-text').innerText = UserManager.user.score;
+            document.getElementById('completed-text').innerText =
+                UserManager.user.completedLevels.length + '/3';
+
+            loadMiniLeaderboard();
+
+            for(let i = 1; i <= 3; i++) {
+                const card = document.getElementById(`lvl${i}`);
+                const statsDiv = document.getElementById(`stats-${i}`);
+
+                if (i > UserManager.user.unlocked) {
+                    card.classList.add('disabled');
+                    card.style.cursor = 'not-allowed';
+                }
+
+                if (UserManager.user.completedLevels.includes(i)) {
+                    card.classList.add('completed');
+
+                    const attempts = UserManager.user.attempts[i] || 0;
+                    const bestTime = UserManager.user.bestTimes[i];
+                    let statsHTML = '<small>Пройдено';
+
+                    if (bestTime) {
+                        const mins = Math.floor(bestTime / 60);
+                        const secs = bestTime % 60;
+                        statsHTML += ` | ${mins}:${secs.toString().padStart(2, '0')}`;
+                    }
+
+                    if (attempts > 1) {
+                        statsHTML += ` | ${attempts}x`;
+                    }
+
+                    statsHTML += '</small>';
+                    statsDiv.innerHTML = statsHTML;
+                }
+            }
+        } else {
+            setTimeout(() => {
+                const input = document.getElementById('nameInput');
+                if (input) input.focus();
+            }, 100);
+        }
+    };
+
+    function goTo(lvl) {
+        if (UserManager.user && lvl <= UserManager.user.unlocked) {
+            SoundManager.click();
+            window.location.href = `Levels/Level${lvl}/select-mode.html`;
+        } else {
+            SoundManager.error();
+            NotificationManager.show("Этот уровень пока недоступен!\nПройдите предыдущие уровни, чтобы разблокировать.", 'error', 5000);
+        }
+    }
+</script>
+</body>
+</html>

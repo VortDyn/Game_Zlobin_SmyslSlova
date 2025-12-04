@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Лидерборд - Смысл Слова</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="large-header" class="large-header">
+  <canvas id="demo-canvas"></canvas>
+</div>
+
+<div class="container">
+  <h1 class="main-title">
+    <span class="thin">ЛИДЕРБОРД</span>
+  </h1>
+
+  <div class="card">
+    <div style="margin-bottom: 20px;">
+      <button class="btn" onclick="window.location.href='index.html'">
+        ← Назад в меню
+      </button>
+      <button class="btn" style="background:#00b894" onclick="exportLeaderboard()">
+        Экспорт таблицы
+      </button>
+      <button class="btn" style="background:#0984e3" onclick="document.getElementById('importFile').click()">
+        Загрузить таблицу
+      </button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importLeaderboard(event)">
+    </div>
+
+    <div id="leaderboard-container" class="leaderboard-table">
+      <div class="loading-text">Загрузка...</div>
+    </div>
+
+    <div class="leaderboard-stats" id="stats-info">
+      <!-- Статистика будет здесь -->
+    </div>
+  </div>
+
+  <footer style="text-align: center; margin-top: 20px; opacity: 0.6; font-size: 0.9em;">
+    <p>Сделано с ♥</p>
+  </footer>
+</div>
+
+<script src="script.js"></script>
+<script>
+    function loadLeaderboard() {
+        const container = document.getElementById('leaderboard-container');
+        let players = LeaderboardManager.getAllPlayers();
+
+        if (players.length === 0) {
+            container.innerHTML = `
+            <div style="text-align: center; padding: 40px; opacity: 0.7;">
+                <h3>Пока нет результатов</h3>
+                <p>Станьте первым игроком в таблице!</p>
+            </div>
+        `;
+            updateStats(players);
+            return;
+        }
+
+        let html = `
+        <table class="leaderboard">
+            <thead>
+                <tr>
+                    <th>Место</th>
+                    <th>Игрок</th>
+                    <th>Очки</th>
+                    <th>Пройдено</th>
+                    <th>Лучшее время</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+        players.forEach((player, index) => {
+            const medal = `${index + 1}`;
+            const isCurrentUser = UserManager.user && player.name === UserManager.user.name;
+
+            const bestTime = player.bestTimes ? Math.min(...Object.values(player.bestTimes).filter(t => t > 0)) : 0;
+            const bestTimeStr = bestTime && isFinite(bestTime) ? formatTime(bestTime) : '-';
+            console.log(`${bestTimeStr !== isNaN(bestTimeStr)} - ${bestTime}`);
+
+            html += `
+            <tr class="${isCurrentUser ? 'current-user-row' : ''}">
+                <td class="rank-cell">${medal}</td>
+                <td class="name-cell">${player.name}</td>
+                <td class="score-cell">${player.score}</td>
+                <td class="levels-cell">${player.completedLevels.length}/3</td>
+                <td class="time-cell">${bestTimeStr ? bestTimeStr : 0}</td>
+            </tr>
+        `;
+        });
+
+        html += `
+            </tbody>
+        </table>
+    `;
+
+        container.innerHTML = html;
+        updateStats(players);
+    }
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateStats(players) {
+        const statsContainer = document.getElementById('stats-info');
+        const totalPlayers = players.length;
+        const avgScore = totalPlayers > 0 ? Math.round(players.reduce((sum, p) => sum + p.score, 0) / totalPlayers) : 0;
+        const completedAll = players.filter(p => p.completedLevels.length >= 3).length;
+
+        statsContainer.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number">${totalPlayers}</div>
+                <div class="stat-label">Всего игроков</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">${avgScore}</div>
+                <div class="stat-label">Средний балл</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">${completedAll}</div>
+                <div class="stat-label">Прошли все</div>
+            </div>
+        </div>
+    `;
+    }
+
+    function exportLeaderboard() {
+        try {
+            const data = LeaderboardManager.exportToJSON();
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `leaderboard_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            NotificationManager.show('Таблица экспортирована успешно!', 'success');
+        } catch (e) {
+            NotificationManager.show('Ошибка экспорта: ' + e.message, 'error', 6000);
+        }
+    }
+
+    function importLeaderboard(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const success = LeaderboardManager.importFromJSON(e.target.result);
+                if (success) {
+                    loadLeaderboard();
+                    NotificationManager.show('Таблица успешно загружена! Игроки с лучшими результатами сохранены.', 'success', 6000);
+                } else {
+                    NotificationManager.show('Ошибка загрузки таблицы', 'error', 6000);
+                }
+            } catch (err) {
+                NotificationManager.show('Ошибка чтения файла: ' + err.message, 'error', 6000);
+            }
+            // Сбрасываем input для возможности повторной загрузки того же файла
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    window.onload = () => {
+        AnimatedBackground.init();
+        loadLeaderboard();
+    };
+</script>
+</body>
+</html>

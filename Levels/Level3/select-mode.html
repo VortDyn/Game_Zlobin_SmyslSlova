@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Уровень 3 - выбор сложности</title>
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="../select-mode.css">
+</head>
+<body>
+<div id="large-header" class="large-header">
+    <canvas id="demo-canvas"></canvas>
+</div>
+
+<div class="container select-mode-container">
+    <div class="card mode-card mode-theme-l3">
+        <div class="mode-header">
+            <h2>Уровень 3 - выберите сложность</h2>
+        </div>
+      <button class="btn" onclick="window.location.href='../../index.html'">← В меню</button>
+
+        <div class="mode-layout">
+            <div class="mode-options">
+                <p style="opacity:0.7;">Эта версия уровня 2 усиливает динамику категорий и темп.</p>
+                <div class="mode-grid">
+                    <button class="btn mode-btn" data-mode="normal">
+                        <strong>Нормальный</strong>
+                        <span>120 сек, 5 пропусков, 3–4 категории</span>
+                    </button>
+                    <button class="btn mode-btn" data-mode="hard">
+                        <strong>Сложный</strong>
+                        <span>90 сек, 4 пропуска, 4–5 категорий</span>
+                    </button>
+                    <button class="btn mode-btn" data-mode="endless">
+                        <strong>Бесконечный</strong>
+                        <span>Без таймера, 5 пропусков - конец забега</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mode-info card compact-card" style="background: rgba(20,20,20,0.85);">
+                <h3 style="margin-bottom: 15px;">📖 Описание режимов</h3>
+                <div class="instruction-item">
+                    <p><strong>Нормальный:</strong> динамичные категории с комфортным временем на реакцию.</p>
+                </div>
+                <div class="instruction-item">
+                    <p><strong>Сложный:</strong> больше категорий, меньше времени, быстрее перемешивание.</p>
+                </div>
+                <div class="instruction-item">
+                    <p><strong>Бесконечный:</strong> категории перемешиваются без остановки, время не ограничено, но пять пропусков завершают попытку с сохранением очков.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../../script.js"></script>
+<script>
+    (function() {
+        AnimatedBackground.init();
+        const LEVEL_ID = 3;
+        const currentMode = LevelModeManager.get(LEVEL_ID, 'normal');
+        const buttons = document.querySelectorAll('.mode-btn');
+
+        buttons.forEach(btn => {
+            const mode = btn.dataset.mode;
+            if (mode === currentMode) {
+                btn.classList.add('active');
+            }
+            btn.addEventListener('click', () => {
+                LevelModeManager.save(LEVEL_ID, mode);
+                SoundManager.click();
+                window.location.href = './index.html';
+            });
+        });
+    })();
+</script>
+</body>
+</html>
+
