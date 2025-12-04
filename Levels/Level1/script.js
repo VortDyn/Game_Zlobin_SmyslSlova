@@ -6,7 +6,7 @@ const Level1 = {
     levelTime: 90,
     attempts: 0,
     maxPairs: 4,
-    totalCategories: 16, Всего категорий (включая лишние)
+    totalCategories: 16,
     totalSolved: 0,
     endlessTimerDuration: 10,
     endlessExtraCategories: 0,
@@ -57,7 +57,7 @@ const Level1 = {
     },
 
     getEndlessPairCount() {
-        return 2 + Math.floor(Math.random() * 4); 2..5
+        return 2 + Math.floor(Math.random() * 4);
     },
 
     startEndlessTimer() {
@@ -173,19 +173,16 @@ const Level1 = {
         this.clearBoard();
 
 
-        Выбираем случайные пары
         const pairTarget = this.isEndless ? this.getEndlessPairCount() : this.maxPairs;
         const selectedPairs = this.getRandomPairs(pairTarget);
         this.pairsLeft = selectedPairs.length;
         this.currentRoundPairs = selectedPairs.length;
 
-        Собираем все правильные категории
         const correctCategories = new Set();
         selectedPairs.forEach(pair => {
             pair.categories.forEach(cat => correctCategories.add(cat));
         });
 
-        Добавляем категории
         let allCategories = [...correctCategories];
         if (this.isEndless) {
             const extras = this.getEndlessAdditionalCategories(this.endlessExtraCategories, allCategories);
@@ -196,10 +193,8 @@ const Level1 = {
             allCategories = allCategories.concat(distractors);
         }
 
-        Перемешиваем категории
         this.shuffleArray(allCategories);
 
-        Создаем зоны для категорий без наложения
         const zonePositions = this.generateNonOverlappingPositions(
             allCategories.length,
             { width: 110, height: 80 },
@@ -220,7 +215,6 @@ const Level1 = {
 
             zone.dataset.matches = JSON.stringify(matchingWords);
 
-            Ограничиваем область размещения: только zone-area высотой 180px
             zone.style.top = zonePositions[index].y + 'px';
             zone.style.left = zonePositions[index].x + 'px';
 
@@ -228,7 +222,6 @@ const Level1 = {
         });
 
 
-        Создаем перетаскиваемые круги
         const dragPositions = this.generateNonOverlappingPositions(
             selectedPairs.length,
             { width: 80, height: 80 },
@@ -251,7 +244,6 @@ const Level1 = {
             wordsArea.appendChild(drag);
         });
 
-        Обновляем счетчик
         const pairsCount = document.getElementById('pairs-count');
         if (pairsCount) pairsCount.innerText = this.pairsLeft;
     },
@@ -313,7 +305,6 @@ const Level1 = {
                     height: size.height
                 };
 
-                Проверяем пересечение с существующими позициями
                 valid = true;
                 for (const existing of positions) {
                     if (this.rectanglesOverlap(position, existing, padding)) {
@@ -322,7 +313,6 @@ const Level1 = {
                     }
                 }
 
-                Проверяем пересечение с зонами, которые нужно избегать
                 if (valid && avoidZones.length > 0) {
                     for (const zone of avoidZones) {
                         if (this.rectanglesOverlap(position, zone, padding)) {
@@ -338,11 +328,9 @@ const Level1 = {
             if (valid) {
                 positions.push(position);
             } else {
-                Если не удалось найти позицию, используем сетку
                 const cols = Math.ceil(Math.sqrt(count));
                 const row = Math.floor(i / cols);
                 const col = i % cols;
-                Если не нашли - просто переносим вниз по одному ряду
                 position = {
                     x: padding + (i % 3) * (size.width + padding),
                     y: padding + Math.floor(i / 3) * (size.height + padding),
@@ -493,7 +481,6 @@ const Level1 = {
                 const wordToMatch = el.dataset.word;
 
                 if (matchingWords.includes(wordToMatch)) {
-                    ПРАВИЛЬНО!
                     zone.classList.add('filled');
                     zone.style.background = 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)';
                     zone.style.transform = 'scale(1.1)';
@@ -523,7 +510,6 @@ const Level1 = {
                             setTimeout(() => this.finish(true), 500);
                         }
                     } else {
-                        Перемешиваем оставшиеся элементы
                         setTimeout(() => {
                             this.shuffleRemaining();
                             zone.remove();
@@ -534,7 +520,6 @@ const Level1 = {
                         }, 300);
                     }
                 } else {
-                    НЕПРАВИЛЬНО!
                     this.errors++;
                     SoundManager.error();
 
@@ -575,7 +560,6 @@ const Level1 = {
 
         if (remainingZones.length === 0 || remainingDraggers.length === 0) return;
 
-        Генерируем новые позиции для зон
         const zonePositions = this.generateNonOverlappingPositions(
             remainingZones.length,
             { width: 120, height: 80 },
@@ -584,7 +568,6 @@ const Level1 = {
             15
         );
 
-        Генерируем новые позиции для кругов
         const dragPositions = this.generateNonOverlappingPositions(
             remainingDraggers.length,
             { width: 80, height: 80 },
@@ -594,7 +577,6 @@ const Level1 = {
             zonePositions.map(p => ({ ...p, width: 120, height: 80 }))
         );
 
-        Анимированное перемещение зон
         remainingZones.forEach((zone, index) => {
             //zone.style.transition = 'all 0.5s ease-in-out';
             zone.style.left = zonePositions[index].x + 'px';
@@ -604,7 +586,6 @@ const Level1 = {
             }, 500);
         });
 
-        Анимированное перемещение кругов
         remainingDraggers.forEach((drag, index) => {
             //drag.style.transition = 'all 0.5s ease-in-out';
             drag.style.left = dragPositions[index].x + 'px';
@@ -679,7 +660,6 @@ const Level1 = {
     }
 };
 
-Добавляем стили
 const style = document.createElement('style');
 style.textContent = `
     .dragger.dragging {
