@@ -228,7 +228,7 @@ const Level2 = {
             zone.innerHTML = `
                 <div class="category-label">${cat.name}</div>
                 <div class="category-counter">
-                    <span class="cat-count">${cat.count}</span>/${cat.target}
+                    <span class="cat-count">${cat.count}</span>
                 </div>
             `;
             catArea.appendChild(zone);

@@ -324,7 +324,7 @@ const Level3 = {
                 <div class="category-label">${cat.name}</div>
                 ${cat.description ? `<div class="category-description">${cat.description}</div>` : ''}
                 <div class="category-counter">
-                    <span class="cat-count">${cat.count}</span>/${cat.target}
+                    <span class="cat-count">${cat.count}</span>
                 </div>
             `;
             catArea.appendChild(zone);
