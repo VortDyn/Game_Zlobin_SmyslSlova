@@ -22,7 +22,7 @@ const Level2 = {
         normal: {
             levelTime: 120,
             maxMissed: 5,
-            spawnInterval: 2000,
+            spawnInterval: 5000,
             skipReward: 40,
             basePoints: 200,
             visibleCategories: 3,
@@ -31,7 +31,7 @@ const Level2 = {
         hard: {
             levelTime: 90,
             maxMissed: 4,
-            spawnInterval: 1500,
+            spawnInterval: 3500,
             skipReward: 30,
             basePoints: 260,
             visibleCategories: 4,
@@ -40,7 +40,7 @@ const Level2 = {
         endless: {
             levelTime: null,
             maxMissed: 5,
-            spawnInterval: 1700,
+            spawnInterval: 3000,
             skipReward: 50,
             basePoints: 220,
             visibleCategories: 4,
@@ -185,20 +185,31 @@ const Level2 = {
             ? TimerManager.formatTime(this.levelTime)
             : '∞';
         header.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div>Перетащи слова в правильные категории!</div>
-                <div style="text-align: right;">
-                    <div id="timer-display" style="font-size: 1.5em; font-weight: bold; color: #00b894;">
-                        ${timerLabel}
+            <div class="level-header">
+                <div class="level-title">Перетащи слова в правильные категории!</div>
+                <div class="level-stats-panel">
+                    <div class="stat-item stat-item--time">
+                        <div class="stat-label">⏱ Время</div>
+                        <div class="stat-value" id="timer-display">${timerLabel}</div>
                     </div>
-                    <div style="font-size: 0.9em;">
-                        Поймано: <span id="score-count" style="color: #00b894;">0</span>/${this.scoreGoalLabel}
+                    <div class="stat-item stat-item--good">
+                        <div class="stat-label">🎯 Поймано</div>
+                        <div class="stat-value">
+                            <span id="score-count">0</span>/<span>${this.scoreGoalLabel}</span>
+                        </div>
                     </div>
-                    <div style="font-size: 0.9em; color: #d63031;">
-                        Пропущено: <span id="missed-count">0</span>/${this.maxMissed}
+                    <div class="stat-item stat-item--bad">
+                        <div class="stat-label">⚠ Пропущено</div>
+                        <div class="stat-value">
+                            <span id="missed-count">0</span>/<span>${this.maxMissed}</span>
+                        </div>
                     </div>
-                    <div style="font-size: 0.9em; color: #a29bfe;">
-                        Лишние слова: <span id="skip-count">0</span> (+<span id="skip-points">0</span>)
+                    <div class="stat-item stat-item--bonus">
+                        <div class="stat-label">✨ Лишние слова</div>
+                        <div class="stat-value">
+                            <span id="skip-count">0</span>
+                            <small>(+<span id="skip-points">0</span>)</small>
+                        </div>
                     </div>
                 </div>
             </div>

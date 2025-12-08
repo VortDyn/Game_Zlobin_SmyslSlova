@@ -24,7 +24,7 @@ const Level3 = {
         normal: {
             levelTime: 120,
             maxMissed: 5,
-            spawnInterval: 2000,
+            spawnInterval: 4000,
             skipReward: 40,
             basePoints: 220,
             minCategories: 3,
@@ -34,7 +34,7 @@ const Level3 = {
         hard: {
             levelTime: 90,
             maxMissed: 4,
-            spawnInterval: 1600,
+            spawnInterval: 3000,
             skipReward: 30,
             basePoints: 280,
             minCategories: 4,
@@ -44,7 +44,7 @@ const Level3 = {
         endless: {
             levelTime: null,
             maxMissed: 5,
-            spawnInterval: 1800,
+            spawnInterval: 2400,
             skipReward: 50,
             basePoints: 240,
             minCategories: 3,
@@ -71,50 +71,120 @@ const Level3 = {
     },
 
     categoryPool: [
-        { id: 'animals', name: 'Животные', description: 'Живые существа', count: 0, target: 4 },
-        { id: 'food', name: 'Еда', description: 'Продукты питания', count: 0, target: 4 },
-        { id: 'objects', name: 'Мебель', description: 'Вещи и инструменты', count: 0, target: 4 },
-        { id: 'transport', name: 'Транспорт', description: 'Средства передвижения', count: 0, target: 4 },
-        { id: 'nature', name: 'Природная зона', description: 'Природные объекты', count: 0, target: 4 },
-        { id: 'technology', name: 'Технологии', description: 'Гаджеты и техника', count: 0, target: 4 }
+        {
+            id: 'table_item',
+            name: 'Поставить _Х_ на стол',
+            description: 'Предметы, которые логично оставить на столе',
+            count: 0,
+            target: 4
+        },
+        {
+            id: 'headwear',
+            name: 'Надеть _Х_ на голову',
+            description: 'Головные уборы и защита',
+            count: 0,
+            target: 4
+        },
+        {
+            id: 'travel',
+            name: 'Поехать на _Х_',
+            description: 'Средства передвижения',
+            count: 0,
+            target: 4
+        },
+        {
+            id: 'pour',
+            name: 'Налить чай в _Х_',
+            description: 'Посуда и ёмкости для напитков',
+            count: 0,
+            target: 4
+        },
+        {
+            id: 'music',
+            name: 'Сыграть на _Х_',
+            description: 'Музыкальные инструменты',
+            count: 0,
+            target: 4
+        },
+        {
+            id: 'light',
+            name: 'Осветить комнату с помощью _Х_',
+            description: 'Источники света',
+            count: 0,
+            target: 4
+        },
+        {
+            id: 'nature_trip',
+            name: 'Отправиться в _Х_',
+            description: 'Природные зоны для путешествий',
+            count: 0,
+            target: 4
+        },
+        {
+            id: 'picnic_place',
+            name: 'Устроить пикник у _Х_',
+            description: 'Места на природе для отдыха',
+            count: 0,
+            target: 4
+        }
     ],
     words: [
-        // Животные
-        { text: 'КОТ', category: 'animals' },
-        { text: 'СЛОН', category: 'animals' },
-        { text: 'ЛЕВ', category: 'animals' },
-        { text: 'ПИНГВИН', category: 'animals' },
-        { text: 'ЗЕБРА', category: 'animals' },
-        // Еда
-        { text: 'ПИЦЦА', category: 'food' },
-        { text: 'ХЛЕБ', category: 'food' },
-        { text: 'СУП', category: 'food' },
-        { text: 'СЫР', category: 'food' },
-        { text: 'САЛАТ', category: 'food' },
-        // Предметы
-        { text: 'СТОЛ', category: 'objects' },
-        { text: 'СТУЛ', category: 'objects' },
-        { text: 'КРОВАТЬ', category: 'objects' },
-        { text: 'ДИВАН', category: 'objects' },
+        // Стол и посуда
+        { text: 'ВАЗА', category: 'table_item,pour' },
+        { text: 'ТОРТ', category: 'table_item' },
+        { text: 'ЧАЙНИК', category: 'table_item,pour' },
+        { text: 'ЧАШКА', category: 'table_item,pour' },
+        { text: 'КРУЖКА', category: 'table_item,pour' },
+        { text: 'СТАКАН', category: 'table_item,pour' },
+        { text: 'ТЕРМОС', category: 'table_item,pour' },
+        // Головные уборы
+        { text: 'ШАПКА', category: 'table_item,headwear' },
+        { text: 'КАСКА', category: 'table_item,headwear' },
+        { text: 'КОРОНА', category: 'table_item,headwear' },
+        { text: 'ШЛЕМ', category: 'table_item,headwear' },
         // Транспорт
-        { text: 'МАШИНА', category: 'transport' },
-        { text: 'ПОЕЗД', category: 'transport' },
-        { text: 'САМОЛЁТ', category: 'transport' },
-        { text: 'КОРАБЛЬ', category: 'transport' },
-        { text: 'ВЕЛОСИПЕД', category: 'transport' },
+        { text: 'ПОЕЗД', category: 'travel' },
+        { text: 'ВЕЛОСИПЕД', category: 'travel,table_item' },
+        { text: 'САМОКАТ', category: 'travel,table_item' },
+        { text: 'КОНЬ', category: 'travel' },
+        // Музыка
+        { text: 'ГИТАРА', category: 'table_item,music' },
+        { text: 'ПИАНИНО', category: 'table_item,music' },
+        { text: 'СКРИПКА', category: 'table_item,music' },
+        { text: 'БАРАБАН', category: 'table_item,music' },
+        // Свет
+        { text: 'ЛАМПА', category: 'table_item,light' },
+        { text: 'СВЕЧА', category: 'table_item,light' },
+        { text: 'ФОНАРЬ', category: 'table_item,light' },
+        { text: 'ГИРЛЯНДА', category: 'table_item,light' },
         // Природа
-        { text: 'ЛЕС', category: 'nature' },
-        { text: 'РЕКА', category: 'nature' },
-        { text: 'ГОРЫ', category: 'nature' },
-        { text: 'МОРЕ', category: 'nature' },
-        { text: 'ПУСТЫНЯ', category: 'nature' },
-        // Технологии
-        { text: 'ЭКЗОСКЕЛЕТ', category: 'technology' },
-        { text: 'СМАРТФОН', category: 'technology' },
-        { text: 'РОБОТ', category: 'technology' },
-        { text: 'ДРОН', category: 'technology' },
-        { text: 'ЛАЗЕР', category: 'technology' }
+        { text: 'ЛЕС', category: 'nature_trip,picnic_place' },
+        { text: 'МОРЕ', category: 'nature_trip' },
+        { text: 'ГОРЫ', category: 'nature_trip' },
+        { text: 'РЕКА', category: 'nature_trip,picnic_place' },
+        { text: 'ПОЛЯНА', category: 'picnic_place' },
+        { text: 'ОЗЕРО', category: 'nature_trip,picnic_place' }
     ],
+
+    normalizeCategories(value) {
+        if (!value) return [];
+        if (Array.isArray(value)) {
+            return value.map(String).map(v => v.trim()).filter(Boolean);
+        }
+        return String(value)
+            .split(',')
+            .map(part => part.trim())
+            .filter(Boolean);
+    },
+
+    getElementCategories(el) {
+        if (!el) return [];
+        const raw = el.dataset.categories || el.dataset.category || '';
+        return raw
+            .split(',')
+            .map(part => part.trim())
+            .filter(Boolean);
+    },
 
     getVisibleCategoryBounds() {
         const min = Math.max(1, Math.min(this.minVisibleCategories, this.categoryPool.length));
@@ -210,20 +280,31 @@ const Level3 = {
             ? TimerManager.formatTime(this.levelTime)
             : '∞';
         header.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div>Перетащи слова в правильные категории!</div>
-                <div style="text-align: right;">
-                    <div id="timer-display" style="font-size: 1.5em; font-weight: bold; color: #00b894;">
-                        ${timerLabel}
+            <div class="level-header">
+                <div class="level-title">Совмещайте слова с подсказками вроде «Поехать на _Х_»</div>
+                <div class="level-stats-panel">
+                    <div class="stat-item stat-item--time">
+                        <div class="stat-label">⏱ Время</div>
+                        <div class="stat-value" id="timer-display">${timerLabel}</div>
                     </div>
-                    <div style="font-size: 0.9em;">
-                        Поймано: <span id="score-count" style="color: #00b894;">0</span>/${this.scoreGoalLabel}
+                    <div class="stat-item stat-item--good">
+                        <div class="stat-label">🎯 Поймано</div>
+                        <div class="stat-value">
+                            <span id="score-count">0</span>/<span>${this.scoreGoalLabel}</span>
+                        </div>
                     </div>
-                    <div style="font-size: 0.9em; color: #d63031;">
-                        Пропущено: <span id="missed-count">0</span>/${this.maxMissed}
+                    <div class="stat-item stat-item--bad">
+                        <div class="stat-label">⚠ Пропущено</div>
+                        <div class="stat-value">
+                            <span id="missed-count">0</span>/<span>${this.maxMissed}</span>
+                        </div>
                     </div>
-                    <div style="font-size: 0.9em; color: #a29bfe;">
-                        Лишние слова: <span id="skip-count">0</span> (+<span id="skip-points">0</span>)
+                    <div class="stat-item stat-item--bonus">
+                        <div class="stat-label">✨ Лишние слова</div>
+                        <div class="stat-value">
+                            <span id="skip-count">0</span>
+                            <small>(+<span id="skip-points">0</span>)</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -241,6 +322,7 @@ const Level3 = {
             zone.dataset.category = cat.id;
             zone.innerHTML = `
                 <div class="category-label">${cat.name}</div>
+                ${cat.description ? `<div class="category-description">${cat.description}</div>` : ''}
                 <div class="category-counter">
                     <span class="cat-count">${cat.count}</span>/${cat.target}
                 </div>
@@ -285,8 +367,9 @@ const Level3 = {
 
     canSkipWord(el) {
         if (!el) return false;
-        const category = el.dataset.category;
-        return !this.hasActiveCategory(category);
+        const categories = this.getElementCategories(el);
+        if (!categories.length) return true;
+        return !categories.some(catId => this.hasActiveCategory(catId));
     },
 
     handleSkipWord(el) {
@@ -399,7 +482,10 @@ const Level3 = {
         const el = document.createElement('div');
         el.className = 'falling-word';
         el.innerText = wordData.text;
-        el.dataset.category = wordData.category;
+        const categories = this.normalizeCategories(wordData.category || wordData.categories);
+        if (!categories.length) return;
+        el.dataset.category = categories[0];
+        el.dataset.categories = categories.join(',');
         el.style.top = '-20px';
 
         area.appendChild(el);
@@ -697,10 +783,10 @@ const Level3 = {
 
                 zone.classList.remove('highlight');
 
-                const wordCategory = el.dataset.category;
+                const wordCategories = this.getElementCategories(el);
                 const zoneCategory = zone.dataset.category;
 
-                if (wordCategory === zoneCategory) {
+                if (wordCategories.includes(zoneCategory)) {
                     // ПРАВИЛЬНО!
                     this.catchWord(el, zone);
                     dropped = true;

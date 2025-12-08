@@ -13,18 +13,18 @@
 
 <div class="container">
   <h1 class="main-title">
-    СМЫСЛ <span class="thin">СЛОВА</span>
+    СМЫСЛ ✨<span class="thin">СЛОВА 🌟</span>
   </h1>
 
 
   <div id="auth-screen" class="card">
-    <h2>Добро пожаловать!</h2>
-    <p>Введите ваше имя, чтобы начать игру</p>
+    <h2>Добро пожаловать! 🎉</h2>
+    <p>Введите ваше имя, чтобы начать игру 🙌</p>
     <input type="text" id="nameInput" placeholder="Введите имя" maxlength="20"
            style="padding:12px; font-size:1.2em; width: 100%; max-width: 300px; border-radius: 8px; border: 2px solid var(--primary);">
     <br><br>
     <button class="btn btn-large" onclick="startGame()">
-      Начать игру
+      Начать игру 🚀
     </button>
     <br><br>
     <small style="color: rgba(255,255,255,0.6);">
@@ -39,12 +39,12 @@
 
       <div class="side-panel">
         <div class="card compact-card">
-          <h3 style="margin-bottom: 15px;">Топ игроков</h3>
+          <h3 style="margin-bottom: 15px;">Топ игроков 🥇</h3>
           <div id="mini-leaderboard">
             <div class="loading-text">Загрузка...</div>
           </div>
           <button class="btn btn-small" onclick="window.location.href='leaderboard.html'" style="margin-top: 10px;">
-            Полная таблица
+            Полная таблица 🏆
           </button>
         </div>
       </div>
@@ -55,26 +55,26 @@
           <div class="player-info">
             <div class="player-stats">
               <div class="stat-item">
-                <span class="stat-label">Игрок:</span>
+                <span class="stat-label">Игрок 👤:</span>
                 <span id="welcome-text" class="stat-value"></span>
               </div>
               <div class="stat-item">
-                <span class="stat-label">Очки:</span>
+                <span class="stat-label">Очки ✨:</span>
                 <span id="score-text" class="stat-value">0</span>
               </div>
               <div class="stat-item">
-                <span class="stat-label">Пройдено:</span>
+                <span class="stat-label">Пройдено 🎯:</span>
                 <span id="completed-text" class="stat-value">0/3</span>
               </div>
             </div>
           </div>
 
-          <h3 style="margin-top: 20px; margin-bottom: 15px;">Выберите уровень</h3>
+          <h3 style="margin-top: 20px; margin-bottom: 15px;">Выберите уровень 🕹️</h3>
 
           <div class="level-grid">
             <div id="lvl1" class="level-card" onclick="goTo(1)">
-              <h3>Уровень 1</h3>
-              <p class="level-desc">Пары</p>
+              <h3>Уровень 1 🌱</h3>
+              <p class="level-desc">Пары 🔗</p>
               <div class="level-info">
                 <small>90 сек</small>
               </div>
@@ -82,8 +82,8 @@
             </div>
 
             <div id="lvl2" class="level-card" onclick="goTo(2)">
-              <h3>Уровень 2</h3>
-              <p class="level-desc">Скорость</p>
+              <h3>Уровень 2 ⚡</h3>
+              <p class="level-desc">Скорость 🌀</p>
               <div class="level-info">
                 <small>120 сек</small>
               </div>
@@ -91,8 +91,8 @@
             </div>
 
             <div id="lvl3" class="level-card" onclick="goTo(3)">
-              <h3>Уровень 3</h3>
-              <p class="level-desc">Скорость</p>
+              <h3>Уровень 3 🔥</h3>
+              <p class="level-desc">Скорость 🚀</p>
               <div class="level-info">
                 <small>120 сек</small>
               </div>
@@ -102,10 +102,10 @@
 
           <div style="margin-top: 20px;">
             <button class="btn" style="background:#e17055" onclick="resetProgress()">
-              Сбросить прогресс
+              Сбросить прогресс ♻️
             </button>
             <button class="btn" style="background:#d63031" onclick="UserManager.logout()">
-              Сменить игрока
+              Сменить игрока 🔄
             </button>
           </div>
         </div>
@@ -114,19 +114,19 @@
 
       <div class="side-panel">
         <div class="card compact-card">
-          <h3 style="margin-bottom: 15px;">Как играть</h3>
+          <h3 style="margin-bottom: 15px;">Как играть 🎲</h3>
           <div class="how-to-play">
             <div class="instruction-item">
-              <p>1 уровень: переносите слова из кружков в наиболее подходящие категории согласно словам внутри.</p>
+              <p>1 уровень: переносите слова из кружков в наиболее подходящие категории согласно словам внутри. 🧠</p>
             </div>
             <div class="instruction-item">
-              <p>Уровень 2: переносите слова в нужные категории, но теперь слова падают!</p>
+              <p>Уровень 2: переносите слова в нужные категории, но теперь слова падают! ⚡</p>
             </div>
             <div class="instruction-item">
-              <p>Уровень 3: переносите падающие слова в нужные категории, но теперь это сложнее намного!</p>
+              <p>Уровень 3: переносите падающие слова в нужные категории, но теперь это сложнее намного! 💥</p>
             </div>
             <div class="instruction-item">
-              <p>Не забудьте про время!</p>
+              <p>Не забудьте про время! ⏳</p>
             </div>
           </div>
         </div>
@@ -135,7 +135,7 @@
   </div>
 
   <footer style="text-align: center; margin-top: 20px; opacity: 0.6; font-size: 0.9em;">
-    <p>Сделано с ♥</p>
+    <p>Сделано с ♥ и вдохновением ✨</p>
   </footer>
 </div>
 

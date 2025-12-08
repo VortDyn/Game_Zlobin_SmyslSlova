@@ -125,6 +125,74 @@
     flex: 1;
 }
 
+.level-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.level-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    text-align: left;
+}
+
+.level-stats-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.stat-item {
+    min-width: 130px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+.stat-label {
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.75;
+}
+
+.stat-value {
+    font-size: 1.25em;
+    font-weight: 700;
+    margin-top: 4px;
+    color: #dfe6e9;
+    display: flex;
+    gap: 4px;
+    align-items: baseline;
+}
+
+.stat-item--time .stat-value {
+    color: #00b894;
+}
+
+.stat-item--good .stat-value {
+    color: #55efc4;
+}
+
+.stat-item--bad .stat-value {
+    color: #ff7675;
+}
+
+.stat-item--bonus .stat-value {
+    color: #a29bfe;
+}
+
+.stat-item small {
+    font-size: 0.65em;
+    opacity: 0.8;
+}
+
 .level2-menu-btn {
     margin-top: auto;
     align-self: center;
