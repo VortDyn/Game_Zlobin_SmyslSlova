@@ -6,7 +6,7 @@ const Level1 = {
     levelTime: 90,
     attempts: 0,
     maxPairs: 4,
-    totalCategories: 16,
+    totalCategories: 10,
     totalSolved: 0,
     endlessTimerDuration: 10,
     endlessExtraCategories: 0,
@@ -170,9 +170,7 @@ const Level1 = {
         const zoneArea = document.getElementById('zone-area');
         const wordsArea = document.getElementById('words-area');
 
-        this.clearBoard();
-
-
+        // Адаптивные размеры зон и слов под доступное пространство и их количество
         const pairTarget = this.isEndless ? this.getEndlessPairCount() : this.maxPairs;
         const selectedPairs = this.getRandomPairs(pairTarget);
         this.pairsLeft = selectedPairs.length;
@@ -195,19 +193,74 @@ const Level1 = {
 
         this.shuffleArray(allCategories);
 
-        const zonePositions = this.generateNonOverlappingPositions(
+        const zoneSize = this.getAdaptiveZoneSize(zoneArea, allCategories.length);
+        zoneSize.width *= 0.8;
+        zoneSize.height *= 0.8;
+        const dragSize = this.getAdaptiveDragSize(wordsArea, selectedPairs.length);
+
+        this.clearBoard();
+
+        let zonePositions = this.generateNonOverlappingPositions(
             allCategories.length,
-            { width: 110, height: 80 },
+            zoneSize,
             zoneArea.clientWidth,
             zoneArea.clientHeight,
-            10
+            8
         );
+
+        if (zonePositions.length < allCategories.length) {
+            allCategories = this.trimCategoriesForSpace(allCategories, correctCategories, zonePositions.length);
+            zonePositions = this.generateNonOverlappingPositions(
+                allCategories.length,
+                zoneSize,
+                zoneArea.clientWidth,
+                zoneArea.clientHeight,
+                12
+            );
+        }
+
+        if (zonePositions.length < allCategories.length) {
+            const sizeScales = [0.8, 0.6, 0.4];
+            const paddings = [8, 6, 4];
+            let placed = false;
+            for (const s of sizeScales) {
+                const scaled = { width: zoneSize.width * s, height: zoneSize.height * s };
+                for (const pad of paddings) {
+                    const attempt = this.generateNonOverlappingPositions(
+                        allCategories.length,
+                        scaled,
+                        zoneArea.clientWidth,
+                        zoneArea.clientHeight,
+                        pad
+                    );
+                    if (attempt.length === allCategories.length) {
+                        zonePositions = attempt;
+                        zoneSize.width = scaled.width;
+                        zoneSize.height = scaled.height;
+                        placed = true;
+                        break;
+                    }
+                }
+                if (placed) break;
+            }
+        }
+
+        // Если всё ещё не хватает мест — обрезаем дистракторы, сохраняем только то, что поместилось
+        if (zonePositions.length < allCategories.length) {
+            const canPlace = zonePositions.length;
+            allCategories = this.trimCategoriesForSpace(allCategories, correctCategories, canPlace);
+            zonePositions = zonePositions.slice(0, allCategories.length);
+        }
 
 
         allCategories.forEach((category, index) => {
             const zone = document.createElement('div');
             zone.className = 'drop-zone';
             zone.innerHTML = `<div class="zone-label">${category}</div>`;
+            zone.style.setProperty('--zone-width', `${zoneSize.width}px`);
+            zone.style.setProperty('--zone-height', `${zoneSize.height}px`);
+            zone.style.width = `${zoneSize.width}px`;
+            zone.style.height = `${zoneSize.height}px`;
 
             const matchingWords = selectedPairs
                 .filter(pair => pair.categories.includes(category))
@@ -222,13 +275,46 @@ const Level1 = {
         });
 
 
-        const dragPositions = this.generateNonOverlappingPositions(
+        let dragPositions = this.generateNonOverlappingPositions(
             selectedPairs.length,
-            { width: 80, height: 80 },
+            dragSize,
             wordsArea.clientWidth,
             wordsArea.clientHeight,
-            10
+            12
         );
+
+        if (dragPositions.length < selectedPairs.length+2) {
+            const tries = [0.8, 0.68, 0.58, 0.45];
+            for (const scale of tries) {
+                const smaller = {
+                    width: Math.max(1, dragSize.width * scale),
+                    height: Math.max(1, dragSize.height * scale)
+                };
+                const attempt = this.generateNonOverlappingPositions(
+                    selectedPairs.length,
+                    smaller,
+                    wordsArea.clientWidth,
+                    wordsArea.clientHeight,
+                    12
+                );
+                if (attempt.length === selectedPairs.length) {
+                    dragPositions = attempt;
+                    dragSize.width = smaller.width;
+                    dragSize.height = smaller.height;
+                    break;
+                }
+            }
+        }
+
+        if (dragPositions.length < selectedPairs.length) {
+            dragPositions = this.getGridFallbackPositions(
+                selectedPairs.length,
+                { width: Math.max(12, dragSize.width), height: Math.max(12, dragSize.height) },
+                wordsArea.clientWidth,
+                wordsArea.clientHeight,
+                10
+            );
+        }
 
 
         selectedPairs.forEach((pair, index) => {
@@ -236,6 +322,10 @@ const Level1 = {
             drag.className = 'dragger';
             drag.innerHTML = `<div class="drag-content">${pair.word}</div>`;
             drag.dataset.word = pair.word;
+
+            drag.style.setProperty('--drag-size', `${dragSize.width}px`);
+            drag.style.width = `${dragSize.width}px`;
+            drag.style.height = `${dragSize.height}px`;
 
             drag.style.top = dragPositions[index].y + 'px';
             drag.style.left = dragPositions[index].x + 'px';
@@ -288,57 +378,117 @@ const Level1 = {
         }
     },
 
-    generateNonOverlappingPositions: function (count, size, areaWidth, areaHeight, padding = 10, avoidZones = []) {
+    clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+    },
+
+    getAdaptiveZoneSize(container, count = 4) {
+        const rect = container?.getBoundingClientRect?.();
+        const width = Math.max(rect?.width || 0, container?.clientWidth || 0, container?.offsetWidth || 0, 800);
+        const height = Math.max(rect?.height || 0, container?.clientHeight || 0, container?.offsetHeight || 0, 400);
+        const safeCount = Math.max(1, count);
+        const padding = 20;
+        const cell = Math.sqrt(((width - padding * 2) * (height - padding * 2)) / safeCount);
+        const baseW = this.clamp(cell * 0.7, 80, Math.max(120, width / Math.max(2, Math.sqrt(safeCount))));
+        const baseH = this.clamp(cell * 0.55, 64, Math.max(100, height / Math.max(2, Math.sqrt(safeCount))));
+        return { width: baseW, height: baseH };
+    },
+
+    getAdaptiveDragSize(container, count = 4) {
+        const base = this.getAdaptiveZoneSize(container, count);
+        const width = container?.clientWidth || 600;
+        const height = container?.clientHeight || 300;
+        const maxDiameter = Math.max(42, Math.min(Math.min(width, height) * 0.45, 120));
+        const minDiameter = Math.min(52, maxDiameter);
+        const diameter = this.clamp(Math.min(base.width, base.height) * 0.6, minDiameter, maxDiameter);
+        return { width: diameter, height: diameter };
+    },
+
+    getGridFallbackPositions(count, size, areaWidth, areaHeight, padding = 8) {
+        const safeW = Math.max(areaWidth || 0, size.width + padding * 2);
+        const safeH = Math.max(areaHeight || 0, size.height + padding * 2);
+        const cols = Math.max(1, Math.floor((safeW - padding * 2) / (size.width + padding)));
+        const rows = Math.max(1, Math.ceil(count / cols));
         const positions = [];
-        const maxAttempts = 1000;
+        const hStep = (safeW - padding * 2) / cols;
+        const vStep = (safeH - padding * 2) / rows;
+        const effW = Math.min(size.width, hStep - padding);
+        const effH = Math.min(size.height, vStep - padding);
+        for (let i = 0; i < count; i++) {
+            const r = Math.floor(i / cols);
+            const c = i % cols;
+            positions.push({
+                x: padding + c * hStep + (hStep - effW) / 2,
+                y: padding + r * vStep + (vStep - effH) / 2,
+                width: effW,
+                height: effH
+            });
+        }
+        return positions;
+    },
+
+    trimCategoriesForSpace(allCategories, correctSet, availableCount) {
+        if (availableCount <= 0) return [];
+        const correct = allCategories.filter(cat => correctSet.has(cat));
+        const distractors = allCategories.filter(cat => !correctSet.has(cat));
+        const result = [];
+        for (const c of correct) {
+            if (result.length >= availableCount) break;
+            result.push(c);
+        }
+        for (const d of distractors) {
+            if (result.length >= availableCount) break;
+            result.push(d);
+        }
+        return result.slice(0, availableCount);
+    },
+
+    generateNonOverlappingPositions: function (count, size, areaWidth, areaHeight, padding = 6, avoidZones = []) {
+        const positions = [];
+        const safeWidth = Math.max(areaWidth || 0, 0);
+        const safeHeight = Math.max(areaHeight || 0, 0);
+        const maxAttemptsPerItem = 1500;
+
+        // Если контейнер меньше, чем элемент с отступами — сразу пустой результат
+        if (safeWidth < size.width + padding * 2 || safeHeight < size.height + padding * 2) {
+            return [];
+        }
 
         for (let i = 0; i < count; i++) {
-            let attempts = 0;
-            let position;
-            let valid = false;
-
-            while (!valid && attempts < maxAttempts) {
-                position = {
-                    x: Math.random() * (areaWidth - size.width - padding * 2) + padding,
-                    y: Math.random() * (areaHeight - size.height - padding * 2) + padding,
+            let placed = false;
+            for (let attempt = 0; attempt < maxAttemptsPerItem; attempt++) {
+                const pos = {
+                    x: Math.random() * (safeWidth - size.width - padding * 2) + padding,
+                    y: Math.random() * (safeHeight - size.height - padding * 2) + padding,
                     width: size.width,
                     height: size.height
                 };
 
-                valid = true;
+                let valid = true;
                 for (const existing of positions) {
-                    if (this.rectanglesOverlap(position, existing, padding)) {
+                    if (this.rectanglesOverlap(pos, existing, padding)) {
                         valid = false;
                         break;
                     }
                 }
-
                 if (valid && avoidZones.length > 0) {
                     for (const zone of avoidZones) {
-                        if (this.rectanglesOverlap(position, zone, padding)) {
+                        if (this.rectanglesOverlap(pos, zone, padding)) {
                             valid = false;
                             break;
                         }
                     }
                 }
 
-                attempts++;
+                if (valid) {
+                    positions.push(pos);
+                    placed = true;
+                    break;
+                }
             }
 
-            if (valid) {
-                positions.push(position);
-            } else {
-                const cols = Math.ceil(Math.sqrt(count));
-                const row = Math.floor(i / cols);
-                const col = i % cols;
-                position = {
-                    x: padding + (i % 3) * (size.width + padding),
-                    y: padding + Math.floor(i / 3) * (size.height + padding),
-                    width: size.width,
-                    height: size.height
-                };
-                alert('Слишком большое количество зон - приводит к багу');
-                positions.push(position);
+            if (!placed) {
+                break; // места не осталось — выходим
             }
         }
 
@@ -476,7 +626,7 @@ const Level1 = {
             const overlapArea = overlapX * overlapY;
             const elArea = (elRect.right - elRect.left) * (elRect.bottom - elRect.top);
 
-            if (overlapArea > elArea * 0.5) {
+            if (overlapArea > elArea * 0.35) {
                 const matchingWords = JSON.parse(zone.dataset.matches || '[]');
                 const wordToMatch = el.dataset.word;
 
@@ -486,14 +636,14 @@ const Level1 = {
                     zone.style.transform = 'scale(1.1)';
                     setTimeout(() => {
                         zone.style.transform = 'scale(1)';
-                    }, 200);
+                        zone.remove();
+                    }, 250);
 
-                    el.style.left = (zone.offsetLeft + (zone.offsetWidth - el.offsetWidth) / 2) + 'px';
-                    el.style.top = (zone.offsetTop + (zone.offsetHeight - el.offsetHeight) / 2) + 'px';
-                    el.style.pointerEvents = 'none';
-                    el.classList.add('locked');
+                    el.remove();    
 
                     SoundManager.success();
+
+
 
                     this.pairsLeft--;
                     this.totalSolved++;
@@ -560,9 +710,14 @@ const Level1 = {
 
         if (remainingZones.length === 0 || remainingDraggers.length === 0) return;
 
+        const zoneSample = remainingZones[0];
+        const dragSample = remainingDraggers[0];
+        const zoneSize = zoneSample ? { width: zoneSample.offsetWidth, height: zoneSample.offsetHeight } : { width: 120, height: 80 };
+        const dragSize = dragSample ? { width: dragSample.offsetWidth, height: dragSample.offsetHeight } : { width: 80, height: 80 };
+
         const zonePositions = this.generateNonOverlappingPositions(
             remainingZones.length,
-            { width: 120, height: 80 },
+            zoneSize,
             zoneArea.clientWidth || 800,
             zoneArea.clientHeight || 400,
             15
@@ -570,11 +725,11 @@ const Level1 = {
 
         const dragPositions = this.generateNonOverlappingPositions(
             remainingDraggers.length,
-            { width: 80, height: 80 },
+            dragSize,
             wordsArea.clientWidth || 800,
             wordsArea.clientHeight || 400,
             15,
-            zonePositions.map(p => ({ ...p, width: 120, height: 80 }))
+            zonePositions.map(p => ({ ...p, width: zoneSize.width, height: zoneSize.height }))
         );
 
         remainingZones.forEach((zone, index) => {
@@ -688,8 +843,15 @@ style.textContent = `
         align-items: center;
         justify-content: center;
         height: 100%;
-        font-size: 0.95em;
+        font-size: clamp(12px, calc(var(--drag-size, 80px) * 0.24), 18px);
         font-weight: bold;
+        text-align: center;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        white-space: normal;
+        line-height: 1.15;
+        padding: 0 6px;
+        width: 100%;
     }
 `;
 document.head.appendChild(style);

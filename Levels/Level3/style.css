@@ -1,12 +1,32 @@
+:root {
+    --level-padding: clamp(12px, 2vw, 24px);
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+.level-container {
+    height: 100vh;
+    padding: var(--level-padding);
+    box-sizing: border-box;
+}
+
 .storm-area {
-    min-height: 400px;
+    min-height: 60px;
     background: #2d3436;
     position: relative;
     overflow: hidden;
     border: 2px solid #fab1a0;
     border-radius: 10px 10px 0 0;
-    
-    margin-bottom: 60px;
+    margin-bottom: clamp(8px, 1.6vw, 14px);
+    flex: 1 1 0;
+    max-height: 60vh;
 }
 .storm-area::after {
     content: '';
@@ -22,21 +42,26 @@
 
 .categories-area {
     display: flex;
-    gap: 10px;
-    padding: 15px;
+    gap: clamp(6px, 1vw, 12px);
+    padding: clamp(10px, 1.5vw, 15px);
     background: rgba(0, 0, 0, 0.2);
     border-radius: 0 0 10px 10px;
     min-height: 100px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    flex: 0 1 17vh;
+    max-height: 24vh;
+    overflow: hidden;
+    margin-bottom: clamp(10px, 2vw, 16px);
 }
 
 .category-zone {
-    flex: 1;
-    min-width: 150px;
+    flex: 1 1 0;
+    min-width: clamp(10px, 22vw, 150px);
+    max-height: 14vh;
     border: 3px dashed #74b9ff;
     background: rgba(116, 185, 255, 0.1);
     border-radius: 10px;
-    padding: 10px;
+    padding: clamp(8px, 1.5vw, 12px);
     text-align: center;
     transition: all 0.3s;
     position: relative;
@@ -62,9 +87,9 @@
 
 .category-label {
     font-weight: bold;
-    font-size: 1.2em;
+    font-size: clamp(0.9em, 2vw, 1.1em);
     color: #74b9ff;
-    margin-bottom: 5px;
+    margin-bottom: clamp(2px, 0.8vw, 5px);
     text-transform: uppercase;
 }
 
@@ -75,10 +100,10 @@
 }
 
 .category-counter {
-    font-size: 0.9em;
+    font-size: clamp(0.8em, 1.6vw, 0.95em);
     color: #00b894;
     font-weight: bold;
-    margin-top: 5px;
+    margin-top: clamp(2px, 0.8vw, 6px);
 }
 
 .falling-word {
@@ -112,17 +137,22 @@
     opacity: 0;
 }
 
-.level2-card {
+.level2-card,
+.level3-card {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    height: 100%;
 }
 
-.level2-card .level-content {
+.level2-card .level-content,
+.level3-card .level-content {
     display: flex;
     flex-direction: column;
     gap: 20px;
     flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .level-header {
@@ -141,35 +171,42 @@
 
 .level-stats-panel {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-wrap: nowrap;
+    gap: clamp(6px, 1vw, 12px);
     justify-content: flex-end;
+    overflow: hidden;
 }
 
 .stat-item {
-    min-width: 130px;
-    padding: 10px 14px;
+    min-width: clamp(110px, 16vw, 150px);
+    padding: clamp(8px, 1.6vw, 12px) clamp(10px, 2vw, 14px);
     border-radius: 14px;
     background: rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    flex: 1 1 0;
+    white-space: nowrap;
 }
 
 .stat-label {
-    font-size: 0.7em;
+    font-size: clamp(0.65em, 1.4vw, 0.85em);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     opacity: 0.75;
 }
 
 .stat-value {
-    font-size: 1.25em;
+    font-size: clamp(1em, 2.8vw, 1.25em);
     font-weight: 700;
     margin-top: 4px;
     color: #dfe6e9;
     display: flex;
     gap: 4px;
     align-items: baseline;
+}
+
+.stat-item--bonus {
+    white-space: nowrap;
 }
 
 .stat-item--time .stat-value {

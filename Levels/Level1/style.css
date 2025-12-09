@@ -1,13 +1,42 @@
+.level-container {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.level1-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: calc(100vh - 40px);
+    max-height: calc(100vh - 40px);
+    overflow: hidden;
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+}
+
 .game-area {
-    min-height: 400px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     background: rgba(255,255,255,0.1);
     border: 2px dashed #aaa;
-    position: relative;
     border-radius: 10px;
+    padding: 12px;
+    min-height: 360px;
 }
 .drop-zone {
-    width: 110px;
-    height: 80px;
+    width: var(--zone-width, 110px);
+    height: var(--zone-height, 80px);
     border: 2px solid white;
     background: rgba(255,255,255,0.2);
     display: flex;
@@ -18,8 +47,8 @@
     font-weight: bold;
 }
 .dragger {
-    width: 80px;
-    height: 80px;
+    width: var(--drag-size, 80px);
+    height: var(--drag-size, 80px);
     background: var(--primary);
     color: white;
     border-radius: 50%;
@@ -30,7 +59,12 @@
     cursor: grab;
     z-index: 100;
     box-shadow: 0 5px 10px rgba(0,0,0,0.3);
-    font-size: 0.9em;
+    font-size: clamp(12px, calc(var(--drag-size, 80px) * 0.24), 18px);
+    padding: 8px;
+    box-sizing: border-box;
+    text-align: center;
+    word-break: break-word;
+    line-height: 1.15;
 }
 .dragger:active { cursor: grabbing; transform: scale(1.1); }
 
@@ -44,13 +78,19 @@
 }
 
 .zone-area {
-    min-height: 400px;
+    flex: 1;
+    min-height: 210px;
+    height: 55%;
     border: 2px dashed #74b9ff;
     background: rgba(0, 121, 255, 0.05);
+    position: relative;
 }
 
 .words-area {
-    min-height: 300px;
+    flex: 1;
+    min-height: 80px;
+    height: 45%;
     border: 2px dashed #55efc4;
     background: rgba(0, 255, 150, 0.05);
+    position: relative;
 }

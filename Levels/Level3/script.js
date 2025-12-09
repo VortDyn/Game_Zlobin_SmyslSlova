@@ -300,7 +300,7 @@ const Level3 = {
                         </div>
                     </div>
                     <div class="stat-item stat-item--bonus">
-                        <div class="stat-label">✨ Лишние слова</div>
+                        <div class="stat-label">✨ Лишние</div>
                         <div class="stat-value">
                             <span id="skip-count">0</span>
                             <small>(+<span id="skip-points">0</span>)</small>
@@ -320,12 +320,16 @@ const Level3 = {
             const zone = document.createElement('div');
             zone.className = 'category-zone';
             zone.dataset.category = cat.id;
-            zone.innerHTML = `
+            zone.innerHTML = 
+            /*`
                 <div class="category-label">${cat.name}</div>
                 ${cat.description ? `<div class="category-description">${cat.description}</div>` : ''}
                 <div class="category-counter">
                     <span class="cat-count">${cat.count}</span>
                 </div>
+            `;*/
+            `
+                <div class="category-label">${cat.name}</div>
             `;
             catArea.appendChild(zone);
         });

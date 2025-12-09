@@ -205,7 +205,7 @@ const Level2 = {
                         </div>
                     </div>
                     <div class="stat-item stat-item--bonus">
-                        <div class="stat-label">✨ Лишние слова</div>
+                        <div class="stat-label">✨ Лишние</div>
                         <div class="stat-value">
                             <span id="skip-count">0</span>
                             <small>(+<span id="skip-points">0</span>)</small>

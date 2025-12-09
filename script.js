@@ -83,6 +83,25 @@ const AnimatedBackground = {
         if (!('ontouchstart' in window)) {
             window.addEventListener('mousemove', (e) => this.mouseMove(e));
         }
+        window.addEventListener('resize', () => this.handleResize());
+    },
+
+    handleResize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+
+        this.target = { x: this.width / 2, y: this.height / 2 };
+
+        const largeHeader = document.getElementById('large-header');
+        if (largeHeader) {
+            largeHeader.style.height = this.height + 'px';
+            largeHeader.style.width = '100%';
+        }
+
+        if (this.canvas) {
+            this.canvas.width = this.width;
+            this.canvas.height = this.height;
+        }
     },
 
     mouseMove(e) {
@@ -192,16 +211,16 @@ const AnimatedBackground = {
 
 const GlobalDB = {
     pairs: [
-        { word: "Король", categories: ["Королева", "Власть", "Правитель", "Карта"] },
+        { word: "Король", categories: ["Королева", "Власть", "Карта"] },
         { word: "Стол", categories: ["Стул", "Мебель"] },
         { word: "День", categories: ["Ночь", "Время", "Солнце", "Природа"] },
-        { word: "Игла", categories: ["Нитка", "Шитьё", "Инструмент"] },
-        { word: "Ключ", categories: ["Замок", "Безопасность", "Мебель"] },
+        { word: "Игла", categories: ["Нитка", "Шитьё"] },
+        { word: "Ключ", categories: ["Замок", "Мебель"] },
         { word: "Лук", categories: ["Стрелы", "Растение", "Оружие", "Спорт"] },
         { word: "Чашка", categories: ["Блюдце", "Посуда", "Еда"] },
-        { word: "Перо", categories: ["Чернила", "Письмо", "Инструмент", "Письменность"] },
-        { word: "Молоток", categories: ["Гвоздь", "Инструмент", "Мебель"] },
-        { word: "Книга", categories: ["Знание", "Чтение", "Письмо", "Искусство", "Литература"] },
+        { word: "Перо", categories: ["Чернила", "Письмо"] },
+        { word: "Молоток", categories: ["Гвоздь",  "Мебель"] },
+        { word: "Книга", categories: ["Знание", "Чтение", "Письмо", "Искусство"] },
         { word: "Солнце", categories: ["Луна", "Шар", "Звезда"] },
         { word: "Хлеб", categories: ["Масло", "Еда", "Здоровье", "Питание"] }
     ],
@@ -209,7 +228,7 @@ const GlobalDB = {
     distractorCategories: [
         "Спорт", "Музыка", "Транспорт", "Цвет",
         "Эмоции", "Наука", "Здоровье",
-        "Технология", "Природа", "Праздник", "Одежда", "Животные",
+        "Технология", "Природа", "Одежда", "Животные",
          "Овощи","Ягоды", "Семена", "Корни", "Листья", "Цветы"
     ]
 };
