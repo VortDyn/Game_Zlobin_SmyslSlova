@@ -21,7 +21,7 @@ const Level1 = {
             levelTime: 90,
             maxErrors: 5,
             maxPairs: 4,
-            totalCategories: 16,
+            totalCategories: 10,
             basePoints: 150,
             isEndless: false
         },
@@ -29,7 +29,7 @@ const Level1 = {
             levelTime: 70,
             maxErrors: 3,
             maxPairs: 5,
-            totalCategories: 18,
+            totalCategories: 12,
             basePoints: 220,
             isEndless: false
         },
@@ -37,7 +37,7 @@ const Level1 = {
             levelTime: null,
             maxErrors: 3,
             maxPairs: 5,
-            totalCategories: 18,
+            totalCategories: 16,
             basePoints: 180,
             isEndless: true
         }
@@ -205,22 +205,22 @@ const Level1 = {
             zoneSize,
             zoneArea.clientWidth,
             zoneArea.clientHeight,
-            8
+            2
         );
 
         if (zonePositions.length < allCategories.length) {
-            allCategories = this.trimCategoriesForSpace(allCategories, correctCategories, zonePositions.length);
             zonePositions = this.generateNonOverlappingPositions(
                 allCategories.length,
                 zoneSize,
                 zoneArea.clientWidth,
                 zoneArea.clientHeight,
-                12
+                4
             );
         }
 
+        console.log(zonePositions.length, allCategories.length);
         if (zonePositions.length < allCategories.length) {
-            const sizeScales = [0.8, 0.6, 0.4];
+            const sizeScales = [0.8, 0.6, 0.4, 0.1];
             const paddings = [8, 6, 4];
             let placed = false;
             for (const s of sizeScales) {
@@ -259,8 +259,6 @@ const Level1 = {
             zone.innerHTML = `<div class="zone-label">${category}</div>`;
             zone.style.setProperty('--zone-width', `${zoneSize.width}px`);
             zone.style.setProperty('--zone-height', `${zoneSize.height}px`);
-            zone.style.width = `${zoneSize.width}px`;
-            zone.style.height = `${zoneSize.height}px`;
 
             const matchingWords = selectedPairs
                 .filter(pair => pair.categories.includes(category))
@@ -284,7 +282,7 @@ const Level1 = {
         );
 
         if (dragPositions.length < selectedPairs.length+2) {
-            const tries = [0.8, 0.68, 0.58, 0.45];
+            const tries = [0.8, 0.68, 0.58, 0.45, 0.35, 0.25];
             for (const scale of tries) {
                 const smaller = {
                     width: Math.max(1, dragSize.width * scale),
@@ -389,8 +387,8 @@ const Level1 = {
         const safeCount = Math.max(1, count);
         const padding = 20;
         const cell = Math.sqrt(((width - padding * 2) * (height - padding * 2)) / safeCount);
-        const baseW = this.clamp(cell * 0.7, 80, Math.max(120, width / Math.max(2, Math.sqrt(safeCount))));
-        const baseH = this.clamp(cell * 0.55, 64, Math.max(100, height / Math.max(2, Math.sqrt(safeCount))));
+        const baseW = this.clamp(cell * 0.5, 80, Math.max(120, width / Math.max(2, Math.sqrt(safeCount))));
+        const baseH = this.clamp(cell * 0.4, 64, Math.max(100, height / Math.max(2, Math.sqrt(safeCount))));
         return { width: baseW, height: baseH };
     },
 
@@ -425,22 +423,6 @@ const Level1 = {
             });
         }
         return positions;
-    },
-
-    trimCategoriesForSpace(allCategories, correctSet, availableCount) {
-        if (availableCount <= 0) return [];
-        const correct = allCategories.filter(cat => correctSet.has(cat));
-        const distractors = allCategories.filter(cat => !correctSet.has(cat));
-        const result = [];
-        for (const c of correct) {
-            if (result.length >= availableCount) break;
-            result.push(c);
-        }
-        for (const d of distractors) {
-            if (result.length >= availableCount) break;
-            result.push(d);
-        }
-        return result.slice(0, availableCount);
     },
 
     generateNonOverlappingPositions: function (count, size, areaWidth, areaHeight, padding = 6, avoidZones = []) {
@@ -505,21 +487,26 @@ const Level1 = {
     },
 
     createUI() {
-        const header = document.querySelector('.card h2');
+        const card = document.querySelector('.level1-card') || document.querySelector('.card');
+        let header = card ? card.querySelector('h2') : null;
+        if (!header && card) {
+            header = document.createElement('h2');
+            card.insertBefore(header, card.firstChild);
+        }
+        if (!header) return;
         const timerLabel = (!this.isEndless && !this.levelTime)
             ? '∞'
             : TimerManager.formatTime(this.levelTime);
         header.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    Перетащи круги в квадраты (Пары)
-                    <br><small>Пар осталось: <span id="pairs-count">${this.maxPairs}</span></small>
+                    <small>Пар осталось: <span id="pairs-count">${this.maxPairs}</span></small>
                 </div>
                 <div style="text-align: right;">
-                    <div id="timer-display" style="font-size: 1.5em; font-weight: bold; color: #00b894;">
+                    <div id="timer-display" style="font-size: clamp(0.5em, 1.5vw, 2.5em); font-weight: bold; color: #00b894;">
                         ${timerLabel}
                     </div>
-                    <div id="error-display" style="font-size: 0.9em; color: #d63031;">
+                    <div id="error-display" style="font-size: clamp(0.4em, 1.1vw, 1.5em); color: #d63031;">
                         Промахи: <span id="error-count">0</span>/${this.maxErrors}
                     </div>
                 </div>
@@ -626,7 +613,7 @@ const Level1 = {
             const overlapArea = overlapX * overlapY;
             const elArea = (elRect.right - elRect.left) * (elRect.bottom - elRect.top);
 
-            if (overlapArea > elArea * 0.35) {
+            if (overlapArea > elArea * 0.3) {
                 const matchingWords = JSON.parse(zone.dataset.matches || '[]');
                 const wordToMatch = el.dataset.word;
 
@@ -835,7 +822,6 @@ style.textContent = `
     
     .zone-label {
         font-weight: bold;
-        font-size: 1.1em;
     }
     
     .drag-content {
@@ -843,7 +829,7 @@ style.textContent = `
         align-items: center;
         justify-content: center;
         height: 100%;
-        font-size: clamp(12px, calc(var(--drag-size, 80px) * 0.24), 18px);
+        font-size: clamp(4px, calc(var(--drag-size, 80px) * 75%), 28px);
         font-weight: bold;
         text-align: center;
         word-break: break-word;

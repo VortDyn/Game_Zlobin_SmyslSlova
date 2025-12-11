@@ -29,7 +29,8 @@ const Level3 = {
             basePoints: 220,
             minCategories: 3,
             maxCategories: 4,
-            endless: false
+            endless: false,
+            targetFallSeconds: 13
         },
         hard: {
             levelTime: 90,
@@ -39,7 +40,8 @@ const Level3 = {
             basePoints: 280,
             minCategories: 4,
             maxCategories: 5,
-            endless: false
+            endless: false,
+            targetFallSeconds: 10
         },
         endless: {
             levelTime: null,
@@ -49,7 +51,8 @@ const Level3 = {
             basePoints: 240,
             minCategories: 3,
             maxCategories: 5,
-            endless: true
+            endless: true,
+            targetFallSeconds: 10
         }
     },
     categories: [],
@@ -68,6 +71,7 @@ const Level3 = {
         this.isEndless = !!cfg.endless;
         this.minVisibleCategories = cfg.minCategories ?? this.minVisibleCategories;
         this.maxVisibleCategories = cfg.maxCategories ?? this.maxVisibleCategories;
+        this.targetFallSeconds = cfg.targetFallSeconds ?? this.targetFallSeconds ?? 10;
     },
 
     categoryPool: [
@@ -275,13 +279,18 @@ const Level3 = {
     },
 
     createUI() {
-        const header = document.querySelector('.card h2');
+        const card = document.querySelector('.level3-card') || document.querySelector('.card');
+        let header = card ? card.querySelector('h2') : null;
+        if (!header && card) {
+            header = document.createElement('h2');
+            card.insertBefore(header, card.firstChild);
+        }
+        if (!header) return;
         const timerLabel = (this.levelTime && this.levelTime > 0)
             ? TimerManager.formatTime(this.levelTime)
             : '∞';
         header.innerHTML = `
             <div class="level-header">
-                <div class="level-title">Совмещайте слова с подсказками вроде «Поехать на _Х_»</div>
                 <div class="level-stats-panel">
                     <div class="stat-item stat-item--time">
                         <div class="stat-label">⏱ Время</div>
@@ -516,6 +525,18 @@ const Level3 = {
         this.applyWordEffect(el);
     },
 
+    getVerticalSpeed(area) {
+        const rectHeight = area?.getBoundingClientRect ? area.getBoundingClientRect().height : null;
+        const areaHeight = Math.max(11, rectHeight || area?.clientHeight);
+        const randomFactor = 0.9 + Math.random() * 0.3; // 0.9–1.2
+        const effectiveTime = Math.max(
+            0.4,
+            (this.targetFallSeconds / Math.max(0.6, this.currentSpeed)) * randomFactor
+        );
+        const verticalSpeed = areaHeight / effectiveTime; // px/sec
+        return { areaHeight, verticalSpeed };
+    },
+
     applyWordEffect(el) {
         const effectType = Math.random() < 0.5 ? 'fade' : 'shrink';
         const delay = 1000 + Math.random() * 3000;
@@ -544,20 +565,22 @@ const Level3 = {
         return types[Math.floor(Math.random() * types.length)];
     },
 
-    createTrajectory(area, el, forcedType = null) {
+    createTrajectory(area, el, forcedType = null, verticalMetrics = null) {
         const type = forcedType || this.getTrajectoryType();
         const widthLimit = Math.max(0, area.clientWidth - el.offsetWidth);
         const clampX = (val) => Math.max(0, Math.min(val, widthLimit));
         const startX = clampX(parseFloat(el.style.left) || 0);
         const startY = parseFloat(el.style.top) || -40;
-        const baseSpeed = this.currentSpeed + Math.random() * 0.5;
+        const metrics = verticalMetrics || this.getVerticalSpeed(area);
+        const { areaHeight, verticalSpeed } = metrics;
 
         const trajectory = {
             type,
             baseX: startX,
             currentX: startX,
             currentY: startY,
-            verticalSpeed: baseSpeed * 60,
+            verticalSpeed,
+            areaHeight,
             elapsed: 0,
             lastTimestamp: null,
             phase: Math.random() * Math.PI * 2
@@ -584,11 +607,12 @@ const Level3 = {
         if (!area) return;
         this.stopFall(el);
 
-        const areaHeight = area.clientHeight;
         const areaWidth = Math.max(0, area.clientWidth - el.offsetWidth);
         const clampX = (val) => Math.max(0, Math.min(val, areaWidth));
-        const trajectory = this.createTrajectory(area, el, forcedType);
+        const metrics = this.getVerticalSpeed(area);
+        const trajectory = this.createTrajectory(area, el, forcedType, metrics);
         el._trajectory = trajectory;
+        const areaHeight = trajectory.areaHeight;
 
         const animate = (timestamp) => {
             if (el.classList.contains('dragging') || el.classList.contains('caught')) {

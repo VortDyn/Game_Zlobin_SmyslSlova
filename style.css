@@ -10,7 +10,7 @@
 * {
     box-sizing: border-box;
     margin: 0;
-    padding: 0;
+    padding: 1px;
 }
 
 body {
@@ -138,7 +138,7 @@ body {
 
 .btn {
     padding: 12px 28px;
-    font-size: 1rem;
+    font-size: 85%;
     font-weight: 600;
     cursor: pointer;
     border: none;
