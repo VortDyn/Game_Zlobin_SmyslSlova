@@ -170,19 +170,37 @@
             nameInput.focus();
         }
 
-        const adminSequence = ['а', 'д', 'м', 'и', 'н'];
-        let adminProgress = 0;
+        // Секретные "коды" для выдачи админки (набираются с клавиатуры подряд)
+        const adminTriggers = [
+            'admin', 'админ',
+            'vip', 'вип',
+            'bog', 'бог',
+            'god', 'гoд', // на всякий: лат/кирилл похожие символы
+            'test', 'тест',
+            'root', 'рут',
+            'dev', 'дев',
+            'debug', 'дебаг',
+            'super', 'супер',
+            'boss', 'босс'
+        ].map(s => s.toLowerCase());
+
+        const maxTriggerLen = adminTriggers.reduce((m, s) => Math.max(m, s.length), 0);
+        let keyBuffer = '';
 
         document.addEventListener('keydown', (event) => {
-            const key = event.key.toLowerCase();
-            if (key === adminSequence[adminProgress]) {
-                adminProgress++;
-                if (adminProgress === adminSequence.length) {
-                    adminProgress = 0;
+            const key = (event.key || '').toLowerCase();
+
+            // Берём только печатные одиночные символы (буквы/цифры/знаки)
+            if (key.length !== 1) return;
+
+            keyBuffer = (keyBuffer + key).slice(-maxTriggerLen);
+
+            for (const trigger of adminTriggers) {
+                if (keyBuffer.endsWith(trigger)) {
+                    keyBuffer = '';
                     unlockAllLevels();
+                    break;
                 }
-            } else {
-                adminProgress = key === adminSequence[0] ? 1 : 0;
             }
         });
     });
