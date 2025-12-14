@@ -174,14 +174,24 @@
         const adminTriggers = [
             'admin', 'админ',
             'vip', 'вип',
+            'god', 'год',
             'bog', 'бог',
-            'god', 'гoд', // на всякий: лат/кирилл похожие символы
             'test', 'тест',
             'root', 'рут',
             'dev', 'дев',
             'debug', 'дебаг',
             'super', 'супер',
-            'boss', 'босс'
+            'boss', 'босс',
+
+            'фвьшт',
+            'flvby',
+            'мшз',
+            'dbg',
+            'пщв',
+            'еуые',
+            'ntcn',
+            'кщще',
+            'hen'
         ].map(s => s.toLowerCase());
 
         const maxTriggerLen = adminTriggers.reduce((m, s) => Math.max(m, s.length), 0);
@@ -203,6 +213,18 @@
                 }
             }
         });
+
+        if (nameInput) {
+            nameInput.addEventListener('input', () => {
+                const value = (nameInput.value || '').trim().toLowerCase();
+                if (!value) return;
+
+                if (adminTriggers.includes(value)) {
+                    unlockAllLevels();
+                    nameInput.value = '';
+                }
+            });
+        }
     });
 
     function resetProgress() {
@@ -245,7 +267,17 @@
     }
 
     function unlockAllLevels() {
-        if (!UserManager.user) return;
+        if (!UserManager.user) {
+            try {
+                localStorage.setItem('ssw_admin_pending', '1');
+            } catch (e) {}
+            NotificationManager.show(
+                "✅ Код принят! Теперь введите имя и нажмите «Начать игру» — админка включится автоматически.",
+                'success',
+                6000
+            );
+            return;
+        }
         UserManager.user.unlocked = 3;
         UserManager.user.completedLevels = [1, 2, 3];
         UserManager.save();
@@ -263,6 +295,14 @@
             document.getElementById('score-text').innerText = UserManager.user.score;
             document.getElementById('completed-text').innerText =
                 UserManager.user.completedLevels.length + '/3';
+
+            try {
+                if (localStorage.getItem('ssw_admin_pending') === '1') {
+                    localStorage.removeItem('ssw_admin_pending');
+                    unlockAllLevels();
+                    return;
+                }
+            } catch (e) {}
 
             loadMiniLeaderboard();
 
