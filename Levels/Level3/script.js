@@ -629,19 +629,9 @@ const Level3 = {
         }
 
         game.offPathSince = null;
+        game.invalid = false;
         const active = best.path;
         game.activeCategoryId = active.categoryId;
-
-        if (game.invalid) {
-            const dx0 = p.x - game.start.x;
-            const dy0 = p.y - game.start.y;
-            if (Math.hypot(dx0, dy0) < 28) {
-                game.invalid = false;
-                game.completedCategoryId = null;
-                game.paths.forEach(pp => pp.progress = 0);
-                game.lastTByCategory = Object.fromEntries(game.paths.map(pp => [pp.categoryId, 0]));
-            }
-        }
 
         const prevT = game.lastTByCategory[active.categoryId] || 0;
         const targetT = Math.max(0, Math.min(1, best.nearest.t));
@@ -653,21 +643,18 @@ const Level3 = {
         const tJump = targetT - prevT;
 
         let nextT = prevT;
-        if (!game.invalid) {
-            if (tJump >= 0) {
-                // Продвижение вперёд разрешаем только если курсор рядом с "кончиком" открытого пути
-                // и скачок по t не слишком большой.
-                //
-                // Важно: при пересечении путей может происходить переключение на другой путь с большим t.
-                // Это НЕ должно ломать прогресс (иначе приходится вести первый путь заново).
-                // Поэтому большой скачок просто не засчитываем, но и не помечаем попытку invalid.
-                if (distToTip <= openRadius && tJump <= maxTJump) {
-                    nextT = targetT;
-                }
-            } else {
-                // Движение назад не уменьшает прогресс
-                nextT = prevT;
+        if (tJump >= 0) {
+            // Продвижение вперёд разрешаем только если курсор рядом с "кончиком" открытого пути
+            // и скачок по t не слишком большой.
+            //
+            // Это НЕ должно ломать прогресс (иначе приходится вести первый путь заново).
+            // Поэтому большой скачок просто не засчитываем.
+            if (distToTip <= openRadius && tJump <= maxTJump) {
+                nextT = targetT;
             }
+        } else {
+            // Движение назад не уменьшает прогресс
+            nextT = prevT;
         }
 
         game.lastTByCategory[active.categoryId] = nextT;
