@@ -30,7 +30,7 @@ const Level3 = {
             minCategories: 3,
             maxCategories: 4,
             endless: false,
-            targetFallSeconds: 13
+            targetFallSeconds: 17
         },
         hard: {
             levelTime: 90,
@@ -41,7 +41,7 @@ const Level3 = {
             minCategories: 4,
             maxCategories: 5,
             endless: false,
-            targetFallSeconds: 10
+            targetFallSeconds: 15
         },
         endless: {
             levelTime: null,
@@ -52,7 +52,7 @@ const Level3 = {
             minCategories: 3,
             maxCategories: 5,
             endless: true,
-            targetFallSeconds: 10
+            targetFallSeconds: 15
         }
     },
     categories: [],
