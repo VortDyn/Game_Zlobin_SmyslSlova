@@ -57,6 +57,11 @@ const Level3 = {
     },
     categories: [],
     categoryState: [],
+    pathCanvas: null,
+    pathCtx: null,
+    pathDpr: 1,
+    pathResizeBound: false,
+    pathTypes: ['sin', 'cos', 'tan', 'cot'],
     applyModeSettings() {
         const stored = typeof LevelModeManager !== 'undefined'
             ? LevelModeManager.get(3, 'normal')
@@ -257,6 +262,7 @@ const Level3 = {
         this.createUI();
         this.renderCategories();
         this.updateSkipDisplay();
+        this.setupPathCanvas();
 
         const area = document.getElementById('storm-area');
 
@@ -325,10 +331,12 @@ const Level3 = {
         if (!catArea) return;
         catArea.innerHTML = '';
 
-        this.categories.forEach(cat => {
+        this.categories.forEach((cat, idx) => {
             const zone = document.createElement('div');
             zone.className = 'category-zone';
             zone.dataset.category = cat.id;
+            const pathType = this.pathTypes[idx % this.pathTypes.length];
+            zone.dataset.pathType = pathType;
             zone.innerHTML = 
             /*`
                 <div class="category-label">${cat.name}</div>
@@ -338,7 +346,10 @@ const Level3 = {
                 </div>
             `;*/
             `
-                <div class="category-label">${cat.name}</div>
+                <div class="category-label">
+                    ${cat.name}
+                    <span class="category-path-badge category-path-badge--${pathType}">${pathType}</span>
+                </div>
             `;
             catArea.appendChild(zone);
         });
@@ -351,6 +362,7 @@ const Level3 = {
         this.shuffleTimer = setTimeout(() => {
             this.randomizeVisibleCategories();
             this.renderCategories();
+            this.setupPathCanvas();
             this.shuffleTimer = null;
         }, 400);
     },
@@ -360,6 +372,294 @@ const Level3 = {
         const points = document.getElementById('skip-points');
         if (count) count.innerText = this.skipHits;
         if (points) points.innerText = this.skipScore;
+    },
+
+    setupPathCanvas() {
+        const canvas = document.getElementById('path-canvas');
+        if (!canvas) return;
+        this.pathCanvas = canvas;
+        this.pathCtx = canvas.getContext('2d');
+        this.resizePathCanvas();
+        if (!this.pathResizeBound) {
+            this.pathResizeBound = true;
+            window.addEventListener('resize', () => this.resizePathCanvas());
+        }
+    },
+
+    resizePathCanvas() {
+        const canvas = this.pathCanvas;
+        const ctx = this.pathCtx;
+        if (!canvas || !ctx) return;
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        this.pathDpr = dpr;
+
+        const w = Math.max(1, Math.round(rect.width * dpr));
+        const h = Math.max(1, Math.round(rect.height * dpr));
+        if (canvas.width !== w) canvas.width = w;
+        if (canvas.height !== h) canvas.height = h;
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, rect.width, rect.height);
+    },
+
+    clearPathCanvas() {
+        const canvas = this.pathCanvas;
+        const ctx = this.pathCtx;
+        if (!canvas || !ctx) return;
+        const rect = canvas.getBoundingClientRect();
+        ctx.clearRect(0, 0, rect.width, rect.height);
+    },
+
+    canvasPointFromClient(clientX, clientY) {
+        const canvas = this.pathCanvas;
+        if (!canvas) return { x: 0, y: 0 };
+        const rect = canvas.getBoundingClientRect();
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    },
+
+    buildPathPoint(pathType, start, end, t) {
+        const lerp = (a, b, k) => a + (b - a) * k;
+        const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+
+        const x = lerp(start.x, end.x, t);
+        const yBase = lerp(start.y, end.y, t);
+
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const nx = -dy / dist;
+        const ny = dx / dist;
+
+        const amp = Math.min(85, dist * 0.16);
+        const waves = 2;
+        const u = t * waves * 2 * Math.PI;
+        let off = 0;
+
+        if (pathType === 'sin') {
+            off = Math.sin(u);
+        } else if (pathType === 'cos') {
+            off = Math.cos(u);
+        } else if (pathType === 'tan') {
+            off = clamp(Math.tan((t - 0.5) * 1.25), -2.0, 2.0) / 2.0;
+        } else if (pathType === 'cot') {
+            const v = Math.tan((t - 0.5) * 1.25);
+            const safeInv = (Math.abs(v) < 0.12) ? (v >= 0 ? 1 / 0.12 : -1 / 0.12) : (1 / v);
+            off = clamp(safeInv, -2.0, 2.0) / 2.0;
+        }
+
+        return { x: x + nx * amp * off, y: yBase + ny * amp * off };
+    },
+
+    buildPathSamples(pathType, start, end, steps = 150) {
+        const samples = [];
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const p = this.buildPathPoint(pathType, start, end, t);
+            samples.push({ t, x: p.x, y: p.y });
+        }
+        return samples;
+    },
+
+    findNearestOnPath(samples, p) {
+        let best = null;
+        let bestD2 = Infinity;
+        for (const s of samples) {
+            const dx = s.x - p.x;
+            const dy = s.y - p.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < bestD2) {
+                bestD2 = d2;
+                best = s;
+            }
+        }
+        if (!best) return null;
+        return { t: best.t, dist: Math.sqrt(bestD2) };
+    },
+
+    drawPathOverlay(game) {
+        const ctx = this.pathCtx;
+        const canvas = this.pathCanvas;
+        if (!ctx || !canvas || !game) return;
+        const rect = canvas.getBoundingClientRect();
+        ctx.clearRect(0, 0, rect.width, rect.height);
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(0, 0, rect.width, rect.height);
+        ctx.restore();
+
+        const drawOne = (path, isActive) => {
+            const alpha = isActive ? 1.0 : 0.55;
+            ctx.save();
+            ctx.lineWidth = isActive ? 4 : 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+            ctx.beginPath();
+            path.samples.forEach((s, idx) => {
+                if (idx === 0) ctx.moveTo(s.x, s.y);
+                else ctx.lineTo(s.x, s.y);
+            });
+            ctx.stroke();
+
+            const prog = Math.max(0, Math.min(1, path.progress || 0));
+            ctx.strokeStyle = `rgba(0,184,148,${alpha})`;
+            ctx.lineWidth = isActive ? 6 : 5;
+            ctx.beginPath();
+            let lastIdx = 0;
+            for (let i = 0; i < path.samples.length; i++) {
+                if (path.samples[i].t <= prog) lastIdx = i;
+            }
+            path.samples.slice(0, Math.max(1, lastIdx + 1)).forEach((s, idx) => {
+                if (idx === 0) ctx.moveTo(s.x, s.y);
+                else ctx.lineTo(s.x, s.y);
+            });
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(253, 203, 110, 0.95)';
+            ctx.beginPath();
+            ctx.arc(game.start.x, game.start.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = isActive ? 'rgba(9, 132, 227, 0.95)' : 'rgba(255,255,255,0.75)';
+            ctx.beginPath();
+            ctx.arc(path.end.x, path.end.y, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        };
+
+        game.paths.forEach(p => drawOne(p, game.activeCategoryId === p.categoryId));
+
+        if (game.invalid) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(214,48,49,0.12)';
+            ctx.fillRect(0, 0, rect.width, rect.height);
+            ctx.restore();
+        }
+    },
+
+    startPathGame(el) {
+        this.setupPathCanvas();
+        if (!this.pathCanvas) return;
+        const zones = Array.from(document.querySelectorAll('.category-zone'));
+        if (!zones.length) return;
+
+        const elRect = el.getBoundingClientRect();
+        const start = this.canvasPointFromClient(elRect.left + elRect.width / 2, elRect.top + elRect.height / 2);
+
+        const paths = zones.map(zone => {
+            const zr = zone.getBoundingClientRect();
+            const end = this.canvasPointFromClient(zr.left + zr.width / 2, zr.top + Math.min(26, zr.height / 2));
+            const pathType = zone.dataset.pathType || 'sin';
+            const samples = this.buildPathSamples(pathType, start, end, 150);
+            return { categoryId: zone.dataset.category, pathType, end, samples, progress: 0 };
+        });
+
+        el._pathGame = {
+            start,
+            paths,
+            activeCategoryId: null,
+            completedCategoryId: null,
+            invalid: false,
+            offPathSince: null,
+            lastTByCategory: Object.fromEntries(paths.map(p => [p.categoryId, 0]))
+        };
+
+        this.drawPathOverlay(el._pathGame);
+    },
+
+    updatePathGame(el, e) {
+        if (!el || !el._pathGame || !this.pathCanvas) return;
+        const game = el._pathGame;
+        const p = this.canvasPointFromClient(e.clientX, e.clientY);
+        const tolerance = 22;
+        const openRadius = 66; // насколько далеко можно быть от "открытого" конца пути, чтобы прогресс продолжал открываться
+        const maxTJump = 0.25;  // максимум "скачка" по t за один апдейт (защита от телепорта к концу)
+        const now = Date.now();
+
+        let best = null;
+        for (const path of game.paths) {
+            const nearest = this.findNearestOnPath(path.samples, p);
+            if (!nearest) continue;
+            if (!best || nearest.dist < best.nearest.dist) {
+                best = { path, nearest };
+            }
+        }
+
+        if (!best || best.nearest.dist > tolerance) {
+            if (game.offPathSince == null) game.offPathSince = now;
+            if (now - game.offPathSince > 220) game.invalid = true;
+            game.activeCategoryId = null;
+            this.drawPathOverlay(game);
+            return;
+        }
+
+        game.offPathSince = null;
+        const active = best.path;
+        game.activeCategoryId = active.categoryId;
+
+        if (game.invalid) {
+            const dx0 = p.x - game.start.x;
+            const dy0 = p.y - game.start.y;
+            if (Math.hypot(dx0, dy0) < 28) {
+                game.invalid = false;
+                game.completedCategoryId = null;
+                game.paths.forEach(pp => pp.progress = 0);
+                game.lastTByCategory = Object.fromEntries(game.paths.map(pp => [pp.categoryId, 0]));
+            }
+        }
+
+        const prevT = game.lastTByCategory[active.categoryId] || 0;
+        const targetT = Math.max(0, Math.min(1, best.nearest.t));
+
+        // Запрещаем "телепорт" прогресса: путь может открываться только рядом с текущей открытой точкой.
+        const tipIdx = Math.max(0, Math.min(active.samples.length - 1, Math.floor(prevT * (active.samples.length - 1))));
+        const tip = active.samples[tipIdx];
+        const distToTip = Math.hypot(p.x - tip.x, p.y - tip.y);
+        const tJump = targetT - prevT;
+
+        let nextT = prevT;
+        if (!game.invalid) {
+            if (tJump >= 0) {
+                // Продвижение вперёд разрешаем только если курсор рядом с "кончиком" открытого пути
+                // и скачок по t не слишком большой.
+                //
+                // Важно: при пересечении путей может происходить переключение на другой путь с большим t.
+                // Это НЕ должно ломать прогресс (иначе приходится вести первый путь заново).
+                // Поэтому большой скачок просто не засчитываем, но и не помечаем попытку invalid.
+                if (distToTip <= openRadius && tJump <= maxTJump) {
+                    nextT = targetT;
+                }
+            } else {
+                // Движение назад не уменьшает прогресс
+                nextT = prevT;
+            }
+        }
+
+        game.lastTByCategory[active.categoryId] = nextT;
+        active.progress = Math.max(active.progress || 0, nextT);
+
+        const endDx = p.x - active.end.x;
+        const endDy = p.y - active.end.y;
+        const nearEnd = Math.hypot(endDx, endDy) < 26;
+        if (!game.invalid && nearEnd && active.progress >= 0.985) {
+            game.completedCategoryId = active.categoryId;
+        }
+
+        const zones = document.querySelectorAll('.category-zone');
+        zones.forEach(z => z.classList.toggle('highlight', z.dataset.category === game.activeCategoryId));
+
+        this.drawPathOverlay(game);
+    },
+
+    stopPathGame(el) {
+        if (!el) return;
+        if (el._pathGame) delete el._pathGame;
+        const zones = document.querySelectorAll('.category-zone');
+        zones.forEach(z => z.classList.remove('highlight'));
+        this.clearPathCanvas();
     },
 
     clearAreas() {
@@ -388,6 +688,7 @@ const Level3 = {
     handleSkipWord(el) {
         if (!el || el.classList.contains('skip-resolved')) return;
         this.stopFall(el);
+        this.stopPathGame(el);
         el.classList.add('skip-resolved');
         delete el._dragContext;
 
@@ -405,6 +706,7 @@ const Level3 = {
     handleInvalidSkip(el) {
         if (!el || el.classList.contains('skip-resolved')) return;
         this.stopFall(el);
+        this.stopPathGame(el);
         el.classList.add('skip-resolved');
         delete el._dragContext;
 
@@ -745,6 +1047,9 @@ const Level3 = {
             el.style.zIndex = 10000;
             el.classList.add('dragging');
             SoundManager.click();
+
+            // Мини-игра: вести слово по пути на canvas (а не просто отпустить в зоне)
+            this.startPathGame(el);
         };
 
         const onMouseUp = (e) => {
@@ -753,14 +1058,31 @@ const Level3 = {
             el.style.zIndex = 100;
             el.classList.remove('dragging');
 
-            const dropped = this.checkDrop(el, e);
+            const completedCategoryId = el._pathGame ? el._pathGame.completedCategoryId : null;
+            const isInvalid = el._pathGame ? !!el._pathGame.invalid : false;
+            this.stopPathGame(el);
 
-            if (!dropped) {
+            if (!completedCategoryId || isInvalid) {
                 // Если не попал, продолжаем падение
                 restoreToStormArea();
                 this.resumeFall(el, container);
             } else {
-                delete el._dragContext;
+                const zone = document.querySelector(`.category-zone[data-category="${completedCategoryId}"]`);
+                if (!zone) {
+                    restoreToStormArea();
+                    this.resumeFall(el, container);
+                    return;
+                }
+
+                const wordCategories = this.getElementCategories(el);
+                if (wordCategories.includes(completedCategoryId)) {
+                    this.catchWord(el, zone);
+                    delete el._dragContext;
+                } else {
+                    this.wrongCategory(zone);
+                    restoreToStormArea();
+                    this.resumeFall(el, container);
+                }
             }
         };
 
@@ -776,8 +1098,8 @@ const Level3 = {
                 el.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
                 el.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
 
-                // Подсветка зон
-                this.highlightZones(e);
+                // Мини-игра: обновляем прохождение по путям
+                this.updatePathGame(el, e);
             }
         };
 
@@ -834,6 +1156,7 @@ const Level3 = {
     catchWord(el, zone) {
         el.classList.add('caught');
         this.stopFall(el);
+        this.stopPathGame(el);
         delete el._dragContext;
 
         // Эффект исчезновения
