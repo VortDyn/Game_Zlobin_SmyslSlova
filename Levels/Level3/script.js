@@ -62,6 +62,12 @@ const Level3 = {
     pathDpr: 1,
     pathResizeBound: false,
     pathTypes: ['sin', 'cos', 'tan', 'cot'],
+    pathPalette: {
+        sin: { base: 'rgba(9,132,227,', progress: 'rgba(116,185,255,' },
+        cos: { base: 'rgba(0,184,148,', progress: 'rgba(85,239,196,' },
+        tan: { base: 'rgba(253,203,110,', progress: 'rgba(255,234,167,' },
+        cot: { base: 'rgba(162,155,254,', progress: 'rgba(223,230,233,' }
+    },
     applyModeSettings() {
         const stored = typeof LevelModeManager !== 'undefined'
             ? LevelModeManager.get(3, 'normal')
@@ -434,6 +440,9 @@ const Level3 = {
         const amp = Math.min(85, dist * 0.16);
         const waves = 2;
         const u = t * waves * 2 * Math.PI;
+        // Огибающая, чтобы на концах пути смещение всегда было 0
+        // (иначе конец линии может не совпадать с end, и перенос иногда не засчитывается).
+        const envelope = Math.sin(Math.PI * t);
         let off = 0;
 
         if (pathType === 'sin') {
@@ -447,6 +456,8 @@ const Level3 = {
             const safeInv = (Math.abs(v) < 0.12) ? (v >= 0 ? 1 / 0.12 : -1 / 0.12) : (1 / v);
             off = clamp(safeInv, -2.0, 2.0) / 2.0;
         }
+
+        off *= envelope;
 
         let px = x + nx * amp * off;
         let py = yBase + ny * amp * off;
@@ -512,11 +523,12 @@ const Level3 = {
 
         const drawOne = (path, isActive) => {
             const alpha = isActive ? 1.0 : 0.55;
+            const palette = this.pathPalette[path.pathType] || this.pathPalette.sin;
             ctx.save();
             ctx.lineWidth = isActive ? 4 : 3;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+            ctx.strokeStyle = `${palette.base}${alpha})`;
             ctx.beginPath();
             path.samples.forEach((s, idx) => {
                 if (idx === 0) ctx.moveTo(s.x, s.y);
@@ -525,7 +537,7 @@ const Level3 = {
             ctx.stroke();
 
             const prog = Math.max(0, Math.min(1, path.progress || 0));
-            ctx.strokeStyle = `rgba(0,184,148,${alpha})`;
+            ctx.strokeStyle = `${palette.progress}${alpha})`;
             ctx.lineWidth = isActive ? 6 : 5;
             ctx.beginPath();
             let lastIdx = 0;
@@ -543,7 +555,8 @@ const Level3 = {
             ctx.arc(game.start.x, game.start.y, 6, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = isActive ? 'rgba(9, 132, 227, 0.95)' : 'rgba(255,255,255,0.75)';
+            // Финишная точка — цветом своего пути
+            ctx.fillStyle = `${palette.base}${isActive ? 0.95 : 0.75})`;
             ctx.beginPath();
             ctx.arc(path.end.x, path.end.y, 7, 0, Math.PI * 2);
             ctx.fill();
