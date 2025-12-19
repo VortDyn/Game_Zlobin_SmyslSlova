@@ -418,7 +418,7 @@ const Level3 = {
         return { x: clientX - rect.left, y: clientY - rect.top };
     },
 
-    buildPathPoint(pathType, start, end, t) {
+    buildPathPoint(pathType, start, end, t, limits = null) {
         const lerp = (a, b, k) => a + (b - a) * k;
         const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
 
@@ -448,14 +448,35 @@ const Level3 = {
             off = clamp(safeInv, -2.0, 2.0) / 2.0;
         }
 
-        return { x: x + nx * amp * off, y: yBase + ny * amp * off };
+        let px = x + nx * amp * off;
+        let py = yBase + ny * amp * off;
+
+        if (limits) {
+            const minX = Number.isFinite(limits.minX) ? limits.minX : 0;
+            const maxX = Number.isFinite(limits.maxX) ? limits.maxX : minX;
+            const minY = Number.isFinite(limits.minY) ? limits.minY : 0;
+            const maxY = Number.isFinite(limits.maxY) ? limits.maxY : minY;
+            px = clamp(px, minX, maxX);
+            py = clamp(py, minY, maxY);
+        }
+
+        return { x: px, y: py };
     },
 
     buildPathSamples(pathType, start, end, steps = 150) {
+        const canvas = this.pathCanvas;
+        const pad = 12;
+        let limits = null;
+        if (canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const maxX = Math.max(pad, rect.width - pad);
+            const maxY = Math.max(pad, rect.height - pad);
+            limits = { minX: pad, maxX, minY: pad, maxY };
+        }
         const samples = [];
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
-            const p = this.buildPathPoint(pathType, start, end, t);
+            const p = this.buildPathPoint(pathType, start, end, t, limits);
             samples.push({ t, x: p.x, y: p.y });
         }
         return samples;
@@ -543,15 +564,26 @@ const Level3 = {
     startPathGame(el) {
         this.setupPathCanvas();
         if (!this.pathCanvas) return;
+        const canvasRect = this.pathCanvas.getBoundingClientRect();
+        const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+        const pad = 12;
         const zones = Array.from(document.querySelectorAll('.category-zone'));
         if (!zones.length) return;
 
         const elRect = el.getBoundingClientRect();
-        const start = this.canvasPointFromClient(elRect.left + elRect.width / 2, elRect.top + elRect.height / 2);
+        const rawStart = this.canvasPointFromClient(elRect.left + elRect.width / 2, elRect.top + elRect.height / 2);
+        const start = {
+            x: clamp(rawStart.x, pad, Math.max(pad, canvasRect.width - pad)),
+            y: clamp(rawStart.y, pad, Math.max(pad, canvasRect.height - pad))
+        };
 
         const paths = zones.map(zone => {
             const zr = zone.getBoundingClientRect();
-            const end = this.canvasPointFromClient(zr.left + zr.width / 2, zr.top + Math.min(26, zr.height / 2));
+            const rawEnd = this.canvasPointFromClient(zr.left + zr.width / 2, zr.top + Math.min(26, zr.height / 2));
+            const end = {
+                x: clamp(rawEnd.x, pad, Math.max(pad, canvasRect.width - pad)),
+                y: clamp(rawEnd.y, pad, Math.max(pad, canvasRect.height - pad))
+            };
             const pathType = zone.dataset.pathType || 'sin';
             const samples = this.buildPathSamples(pathType, start, end, 150);
             return { categoryId: zone.dataset.category, pathType, end, samples, progress: 0 };
