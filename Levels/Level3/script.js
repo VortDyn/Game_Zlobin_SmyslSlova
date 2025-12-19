@@ -453,8 +453,7 @@ const Level3 = {
             off = clamp(Math.tan((t - 0.5) * 1.25), -2.0, 2.0) / 2.0;
         } else if (pathType === 'cot') {
             const v = Math.tan((t - 0.5) * 1.25);
-            const safeInv = (Math.abs(v) < 0.12) ? (v >= 0 ? 1 / 0.12 : -1 / 0.12) : (1 / v);
-            off = clamp(safeInv, -2.0, 2.0) / 2.0;
+            off = (2 / Math.PI) * Math.atan2(1, v) - 1; // [-1..1], 0 в центре
         }
 
         off *= envelope;
