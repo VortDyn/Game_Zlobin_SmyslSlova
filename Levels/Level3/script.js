@@ -351,10 +351,15 @@ const Level3 = {
                     <span class="cat-count">${cat.count}</span>
                 </div>
             `;*/
-            `
+            /*`
                 <div class="category-label">
                     ${cat.name}
                     <span class="category-path-badge category-path-badge--${pathType}">${pathType}</span>
+                </div>
+            `;*/
+            `
+                <div class="category-label">
+                    ${cat.name}
                 </div>
             `;
             catArea.appendChild(zone);
